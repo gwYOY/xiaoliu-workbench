@@ -399,6 +399,7 @@ ul { list-style: none; }
       <div class="bill-cat" data-cat="不爱走路的懒虫"><div class="cat-emoji">🐷</div><div class="cat-name">不爱走路的懒虫</div><div class="cat-sum" id="sum不爱走路的懒虫">0</div></div>
       <div class="bill-cat" data-cat="出门玩耍"><div class="cat-emoji">🎮</div><div class="cat-name">出门玩耍</div><div class="cat-sum" id="sum出门玩耍">0</div></div>
       <div class="bill-cat" data-cat="走在时尚前沿的美人儿"><div class="cat-emoji">👗</div><div class="cat-name">走在时尚前沿的美人儿</div><div class="cat-sum" id="sum走在时尚前沿的美人儿">0</div></div>
+      <div class="bill-cat" data-cat="生活用品小零件"><div class="cat-emoji">🧴</div><div class="cat-name">生活用品小零件</div><div class="cat-sum" id="sum生活用品小零件">0</div></div>
     </div>
     <div class="form-row"><input type="text" id="billItem" placeholder="买了什么" /><input type="number" id="billAmount" placeholder="金额" style="flex:none;width:90px" /><button id="addBillBtn">记一笔</button></div>
     <div id="billList"></div>
@@ -1293,7 +1294,7 @@ $('#sportLog').addEventListener('click', e => { const btn = e.target.closest('[d
 renderSportTypes(); renderSportLog();
 
 /* ===== 记账 ===== */
-const billCats = {'小吃货':'🍰','不爱走路的懒虫':'🐷','出门玩耍':'🎮','走在时尚前沿的美人儿':'👗'};
+const billCats = {'小吃货':'🍰','不爱走路的懒虫':'🐷','出门玩耍':'🎮','走在时尚前沿的美人儿':'👗','生活用品小零件':'🧴'};
 let activeCat = '小吃货';
 let bills = ls.get('bills', []);
 $$('.bill-cat').forEach(c => c.addEventListener('click', () => { activeCat = c.dataset.cat; $$('.bill-cat').forEach(x => x.classList.toggle('active', x === c)); }));
