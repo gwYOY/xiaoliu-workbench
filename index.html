@@ -245,12 +245,23 @@ ul { list-style: none; }
           <option value="book">看书</option>
           <option value="cert">教资</option>
           <option value="study">学习</option>
+          <option value="practice">练题</option>
+          <option value="other">其他</option>
         </select>
         <button id="addStudyBtn">新增</button>
+      </div>
+      <!-- 待办清单预览 -->
+      <div style="margin-top:12px;padding:10px;background:#fde6ef;border-radius:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:13px;font-weight:600;color:#c64a82">📝 今日待办</span>
+          <button style="background:none;padding:0;font-size:11px;color:#c64a82" data-open="todo">管理</button>
+        </div>
+        <div id="todoPreviewHome"></div>
       </div>
       <div class="quick-row">
         <span class="quick-chip qc-yellow" id="dailyWordsBtn">🔤 每日5词</span>
         <span class="quick-chip qc-purple" id="dailySpeakBtn">🗣️ 每日口语</span>
+        <span class="quick-chip qc-pink" id="newsBtn">📰 时政新闻</span>
         <span class="quick-chip qc-yellow" id="speedBtn">⚡ 语速</span>
         <span class="quick-chip qc-pink" onclick="openBili('教师资格证')">🎓 B站教资</span>
         <span class="quick-chip qc-green" id="bookNoteBtn">📝 写感想</span>
@@ -264,7 +275,6 @@ ul { list-style: none; }
         <div class="tile-items">
           <span class="tile-item">🌙 作息</span>
           <span class="tile-item">🌟 习惯</span>
-          <span class="tile-item">📝 待办</span>
           <span class="tile-item">🌳 树洞</span>
         </div>
       </div>
@@ -320,7 +330,7 @@ ul { list-style: none; }
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px"><input type="checkbox" id="routineOn" style="width:18px;height:18px" /> 开启到点提醒（睡觉/起床）</label>
     </div>
     <div class="card" style="margin-bottom:12px;padding:14px;background:#ede4fb;border-color:#ddd0f5">
-      <div class="card-header"><span class="card-title">😴 睡眠记录</span><span id="sleepTodayTag" style="font-size:11px;color:#9989b8">今日未记录</span></div>
+      <div class="card-header"><span class="card-title">😴 夜间睡眠</span><span id="sleepTodayTag" style="font-size:11px;color:#9989b8">今日未记录</span></div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <div style="flex:1;text-align:center;padding:10px;background:#f5f0ff;border-radius:10px">
           <div style="font-size:11px;color:#9989b8">入睡时间</div>
@@ -332,19 +342,55 @@ ul { list-style: none; }
         </div>
       </div>
       <div id="sleepDuration" style="text-align:center;font-size:13px;color:#5b3aa8;font-weight:600;margin-bottom:10px"></div>
-      <button id="saveSleepLog" style="width:100%;padding:10px;background:linear-gradient(135deg,#b794f0,#9f7aea);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600">记录今日睡眠</button>
+      <button id="saveSleepLog" style="width:100%;padding:10px;background:linear-gradient(135deg,#b794f0,#9f7aea);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600">记录夜间睡眠</button>
+    </div>
+    <div class="card" style="margin-bottom:12px;padding:14px;background:#fff5d8;border-color:#f5e8b8">
+      <div class="card-header"><span class="card-title">🌞 白天补觉（夜班后）</span><span id="daySleepTag" style="font-size:11px;color:#9989b8">今日未记录</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="flex:1;text-align:center;padding:10px;background:#fffbf0;border-radius:10px">
+          <div style="font-size:11px;color:#9989b8">入睡时间</div>
+          <input type="time" id="logDaySleep" style="margin-top:4px;padding:6px;border-radius:8px;border:1px solid #f0e0a8;font-size:15px;color:#8a6d1a;background:#fff" />
+        </div>
+        <div style="flex:1;text-align:center;padding:10px;background:#fffbf0;border-radius:10px">
+          <div style="font-size:11px;color:#9989b8">起床时间</div>
+          <input type="time" id="logDayWake" style="margin-top:4px;padding:6px;border-radius:8px;border:1px solid #f0e0a8;font-size:15px;color:#8a6d1a;background:#fff" />
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px"><input type="checkbox" id="logNightShift" style="width:16px;height:16px" /> 🌙 今天上夜班</label>
+      <div id="daySleepDuration" style="text-align:center;font-size:13px;color:#8a6d1a;font-weight:600;margin-bottom:10px"></div>
+      <button id="saveDaySleepLog" style="width:100%;padding:10px;background:linear-gradient(135deg,#f0c75e,#e8b343);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600">记录白天补觉</button>
+    </div>
+    <div class="card" style="margin-bottom:12px;padding:14px;background:#e6f4ea;border-color:#cce8d4">
+      <div class="card-header"><span class="card-title">💤 午睡记录</span><span id="napTag" style="font-size:11px;color:#9989b8">今日未记录</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="flex:1;text-align:center;padding:10px;background:#f0faf3;border-radius:10px">
+          <div style="font-size:11px;color:#9989b8">入睡时间</div>
+          <input type="time" id="logNapSleep" style="margin-top:4px;padding:6px;border-radius:8px;border:1px solid #cce8d4;font-size:15px;color:#2d8a4f;background:#fff" />
+        </div>
+        <div style="flex:1;text-align:center;padding:10px;background:#f0faf3;border-radius:10px">
+          <div style="font-size:11px;color:#9989b8">起床时间</div>
+          <input type="time" id="logNapWake" style="margin-top:4px;padding:6px;border-radius:8px;border:1px solid #cce8d4;font-size:15px;color:#2d8a4f;background:#fff" />
+        </div>
+      </div>
+      <div id="napDuration" style="text-align:center;font-size:13px;color:#2d8a4f;font-weight:600;margin-bottom:10px"></div>
+      <button id="saveNapLog" style="width:100%;padding:10px;background:linear-gradient(135deg,#6fcf7e,#52c068);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600">记录午睡</button>
+    </div>
+    <div class="card" style="margin-bottom:12px;padding:14px;background:linear-gradient(135deg,#ede4fb,#fde6ef);border-color:#ddd0f5">
+      <div class="card-header"><span class="card-title">⏰ 今日总睡眠</span></div>
+      <div id="totalSleepToday" style="text-align:center;padding:8px;font-size:15px;font-weight:700;color:#5b3aa8">暂无记录</div>
+      <div id="totalSleepDetail" style="text-align:center;font-size:12px;color:#9989b8;margin-top:4px"></div>
     </div>
     <div class="card" style="margin-bottom:12px;padding:14px;background:#fde6ef;border-color:#f8d4e2">
       <div class="card-header"><span class="card-title">📊 本月睡眠总结</span><button style="background:none;padding:0;font-size:12px;color:#c64a82" id="prevMonthBtn">◀ 上月</button></div>
       <div id="sleepSummary"></div>
     </div>
+    <div class="card" style="margin-bottom:12px;padding:14px;background:#e3f0fd;border-color:#c8ddf5">
+      <div class="card-header"><span class="card-title">📅 排班日历</span><button style="background:none;padding:0;font-size:12px;color:#4a90d9" id="calOpenBtn">打开日历 ▶</button></div>
+      <div id="calPreview" style="font-size:12px;color:#9989b8;margin-top:6px">点击查看排班、标记夜班/白班/休息</div>
+    </div>
     <div class="card" style="margin-bottom:12px;padding:14px;background:#fff5d8;border-color:#f5e8b8">
       <div class="card-header"><span class="card-title">🌟 习惯打卡</span><button class="form-row" style="background:none;padding:0" data-open="habit">管理</button></div>
       <div id="habitPreview"></div>
-    </div>
-    <div class="card" style="margin-bottom:12px;padding:14px;background:#fde6ef;border-color:#f8d4e2">
-      <div class="card-header"><span class="card-title">📝 待办清单</span><button style="background:none;padding:0" data-open="todo">管理</button></div>
-      <div id="todoPreview"></div>
     </div>
     <div class="card" style="padding:14px;background:#ece4fb;border-color:#ddd0f5">
       <div class="card-header"><span class="card-title">🌳 胡思乱想树洞</span><button style="background:none;padding:0" data-open="tree">写一写</button></div>
@@ -400,8 +446,14 @@ ul { list-style: none; }
       <div class="bill-cat" data-cat="出门玩耍"><div class="cat-emoji">🎮</div><div class="cat-name">出门玩耍</div><div class="cat-sum" id="sum出门玩耍">0</div></div>
       <div class="bill-cat" data-cat="走在时尚前沿的美人儿"><div class="cat-emoji">👗</div><div class="cat-name">走在时尚前沿的美人儿</div><div class="cat-sum" id="sum走在时尚前沿的美人儿">0</div></div>
       <div class="bill-cat" data-cat="生活用品小零件"><div class="cat-emoji">🧴</div><div class="cat-name">生活用品小零件</div><div class="cat-sum" id="sum生活用品小零件">0</div></div>
+      <div class="bill-cat" data-cat="其他支出"><div class="cat-emoji">📦</div><div class="cat-name">其他支出</div><div class="cat-sum" id="sum其他支出">0</div></div>
     </div>
     <div class="form-row"><input type="text" id="billItem" placeholder="买了什么" /><input type="number" id="billAmount" placeholder="金额" style="flex:none;width:90px" /><button id="addBillBtn">记一笔</button></div>
+    <div id="billStats" style="display:flex;gap:8px;margin-bottom:12px">
+      <div style="flex:1;padding:10px;background:#fde6ef;border-radius:10px;text-align:center"><div style="font-size:11px;color:#c64a82">今日</div><div id="billToday" style="font-size:16px;font-weight:700;color:#c64a82;margin-top:2px">¥0</div></div>
+      <div style="flex:1;padding:10px;background:#fff5d8;border-radius:10px;text-align:center"><div style="font-size:11px;color:#8a6d1a">本周</div><div id="billWeek" style="font-size:16px;font-weight:700;color:#8a6d1a;margin-top:2px">¥0</div></div>
+      <div style="flex:1;padding:10px;background:#ede4fb;border-radius:10px;text-align:center"><div style="font-size:11px;color:#5b3aa8">本月</div><div id="billMonth" style="font-size:16px;font-weight:700;color:#5b3aa8;margin-top:2px">¥0</div></div>
+    </div>
     <div id="billList"></div>
     <div class="summary-card" id="billMonthly"></div>
   </div>
@@ -479,6 +531,49 @@ ul { list-style: none; }
   <div class="modal-body">
     <div id="spellArea"></div>
     <div id="spellResult" style="margin-top:14px;padding:12px;background:#fde6ef;border-radius:12px;text-align:center;font-size:13px;color:#c64a82;display:none"></div>
+  </div>
+</div></div>
+
+<!-- 弹窗：时政新闻 -->
+<div class="modal" id="newsModal"><div class="modal-mask"></div><div class="modal-card">
+  <div class="modal-head"><h3>📰 每日时政新闻</h3><button class="modal-close" data-close>×</button></div>
+  <div class="modal-body">
+    <div id="newsLoading" style="text-align:center;padding:30px;color:#9989b8;font-size:14px">正在获取今日新闻...</div>
+    <div id="newsContent"></div>
+    <div id="newsCalendar" style="margin-top:14px;padding:12px;background:#ede4fb;border-radius:12px;text-align:center;font-size:13px;color:#5b3aa8;display:none"></div>
+    <button id="newsRefresh" style="width:100%;margin-top:12px;padding:10px;background:linear-gradient(135deg,#b794f0,#9f7aea);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600">🔄 刷新新闻</button>
+  </div>
+</div></div>
+
+<!-- 弹窗：日历表 -->
+<div class="modal" id="calendarModal"><div class="modal-mask"></div><div class="modal-card">
+  <div class="modal-head"><h3>📅 排班日历</h3><button class="modal-close" data-close>×</button></div>
+  <div class="modal-body">
+    <!-- 月份导航 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <button id="calPrev" style="padding:6px 12px;background:#f5f0ff;border:none;border-radius:8px;font-size:16px;color:#5b3aa8">◀</button>
+      <div id="calTitle" style="font-size:16px;font-weight:700;color:#5b3aa8"></div>
+      <button id="calNext" style="padding:6px 12px;background:#f5f0ff;border:none;border-radius:8px;font-size:16px;color:#5b3aa8">▶</button>
+    </div>
+    <!-- 图例 -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;color:#9989b8">
+      <span><span style="display:inline-block;width:10px;height:10px;background:#4a90d9;border-radius:3px;margin-right:2px"></span>白班</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#5b3aa8;border-radius:3px;margin-right:2px"></span>夜班</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#2d8a4f;border-radius:3px;margin-right:2px"></span>休息</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#c64a82;border-radius:3px;margin-right:2px"></span>重要</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#f0c75e;border-radius:3px;margin-right:2px"></span>今天</span>
+    </div>
+    <!-- 日历网格 -->
+    <div id="calGrid"></div>
+    <!-- 每周固定排班设置 -->
+    <div class="card" style="margin-top:14px;padding:12px;background:#ede4fb;border-color:#ddd0f5">
+      <div style="font-size:13px;font-weight:600;color:#5b3aa8;margin-bottom:8px">🌙 每周固定排班</div>
+      <div id="weeklyShifts" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+    <!-- 选中日期的标记 -->
+    <div class="card" style="margin-top:12px;padding:12px;background:#fde6ef;border-color:#f8d4e2">
+      <div id="calDayInfo" style="font-size:13px;color:#c64a82;text-align:center">点击日期标记/查看</div>
+    </div>
   </div>
 </div></div>
 
@@ -607,7 +702,7 @@ $('#cdDate').addEventListener('change', () => {
 renderCountdown();
 
 /* ===== 学习计划 ===== */
-const tagMap = { english: '英语', book: '看书', cert: '教资', study: '学习' };
+const tagMap = { english: '英语', book: '看书', cert: '教资', study: '学习', practice: '练题', other: '其他' };
 const defaultStudy = [
   { id: 1, text: '英语练习 30 分钟', time: '30', checked: false, tag: 'english' },
   { id: 2, text: '阅读看书 30 分钟', time: '30', checked: false, tag: 'book' },
@@ -1011,6 +1106,188 @@ $('#speedTestBtn').addEventListener('click', () => {
   toast(`试听语速 ${speakRate.toFixed(1)}x`);
 });
 
+/* ===== 每日时政新闻 ===== */
+function loadNews() {
+  $('#newsLoading').style.display = 'block';
+  $('#newsContent').innerHTML = '';
+  $('#newsCalendar').style.display = 'none';
+  const apiUrl = 'https://news.topurl.cn/api?count=12';
+  // 多个 CORS 代理，依次尝试
+  const proxies = [
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl),
+    'https://corsproxy.io/?' + encodeURIComponent(apiUrl),
+    'https://thingproxy.freeboard.io/fetch/' + apiUrl,
+    apiUrl  // 最后直接尝试（某些环境可能支持）
+  ];
+  let proxyIdx = 0;
+  function tryFetch() {
+    if (proxyIdx >= proxies.length) {
+      $('#newsLoading').style.display = 'none';
+      $('#newsContent').innerHTML = '<div style="text-align:center;padding:20px;color:#c64a82;font-size:13px">⚠️ 新闻获取失败<br><span style="font-size:11px;color:#9989b8">所有接口均不可用，可能是网络问题，请稍后重试</span></div>';
+      return;
+    }
+    fetch(proxies[proxyIdx])
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(data => {
+        if (!data || data.code !== 200 || !data.data || !data.data.newsList) throw new Error('数据异常');
+        renderNews(data);
+      })
+      .catch(() => { proxyIdx++; tryFetch(); });
+  }
+  tryFetch();
+}
+
+function renderNews(data) {
+  const newsList = data.data.newsList || [];
+  newsList.sort((a, b) => (b.score || 0) - (a.score || 0));
+  let html = '<div style="font-size:12px;color:#9989b8;margin-bottom:10px">今日时政要闻 · 按重要程度排序 📊</div>';
+  newsList.forEach((n, i) => {
+    const catColor = n.category === '时事' ? '#c64a82' : n.category === '国内' ? '#5b3aa8' : n.category === '国际' ? '#2d8a4f' : '#8a6d1a';
+    const catBg = n.category === '时事' ? '#fde6ef' : n.category === '国内' ? '#ede4fb' : n.category === '国际' ? '#e6f4ea' : '#fff5d8';
+    const score = n.score || 0;
+    const stars = score >= 80 ? '🔥' : score >= 60 ? '⭐' : '';
+    html += `<a href="${n.url}" target="_blank" style="display:block;text-decoration:none;color:inherit;margin-bottom:8px;padding:12px;background:#f5f0ff;border-radius:10px;border-left:3px solid ${catColor}">
+      <div style="font-size:14px;font-weight:600;color:#4a3b6b;line-height:1.4">${i+1}. ${escapeHtml(n.title)} ${stars}</div>
+      <span style="font-size:10px;color:${catColor};background:${catBg};padding:2px 6px;border-radius:4px;margin-top:4px;display:inline-block">${n.category} · 重要度${score}</span>
+    </a>`;
+  });
+  $('#newsContent').innerHTML = html;
+  $('#newsLoading').style.display = 'none';
+  const cal = data.data.calendar;
+  if (cal) {
+    const historyList = data.data.historyList || [];
+    let calHtml = `📅 ${cal.cYear}年${cal.cMonth}月${cal.cDay}日 · 农历${cal.monthCn}${cal.dayCn} · ${cal.ncWeek} · 生肖${cal.animal}`;
+    if (cal.term) calHtml += ` · ${cal.term}`;
+    if (historyList.length) calHtml += `<br><span style="font-size:12px;color:#9989b8">📜 历史上的今天：${historyList[0].event}</span>`;
+    const phrase = data.data.phrase;
+    if (phrase) calHtml += `<br><span style="font-size:12px;color:#6a4cb0">📖 每日成语：<b>${phrase.phrase}</b></span><br><span style="font-size:11px;color:#9989b8">${phrase.explain}</span>${phrase.example ? `<br><span style="font-size:11px;color:#9989b8">例：${phrase.example}</span>` : ''}`;
+    $('#newsCalendar').innerHTML = calHtml;
+    $('#newsCalendar').style.display = 'block';
+  }
+}
+$('#newsBtn').addEventListener('click', () => { $('#newsModal').classList.add('show'); loadNews(); });
+$('#newsRefresh').addEventListener('click', loadNews);
+
+/* ===== 排班日历 ===== */
+let calDate = new Date();
+let calMarked = ls.get('calMarked', {}); // {'2026-8-1': {type:'night/rest/important', note:'备注'}}
+let weeklyShifts = ls.get('weeklyShifts', {1:'',2:'',3:'',4:'',5:'',6:'',0:''}); // 周一到周日: 'night'/'rest'/''
+let selectedCalDay = null;
+
+function renderCalendar() {
+  const year = calDate.getFullYear();
+  const month = calDate.getMonth();
+  $('#calTitle').textContent = `${year}年${month + 1}月`;
+  const firstDay = new Date(year, month, 1).getDay(); // 0=周日
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = todayStr();
+  const weekDays = ['日','一','二','三','四','五','六'];
+  let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center">';
+  weekDays.forEach(w => { html += `<div style="padding:6px;font-size:12px;font-weight:600;color:#9989b8">${w}</div>`; });
+  // 空格
+  for (let i = 0; i < firstDay; i++) html += '<div></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${month+1}-${d}`;
+    const dayOfWeek = new Date(year, month, d).getDay();
+    const mark = calMarked[dateStr];
+    // 检查每周固定排班
+    const weekly = weeklyShifts[dayOfWeek];
+    const effectiveType = mark ? mark.type : (weekly || '');
+    let bg = '#fff', color = '#4a3b6b', border = '1px solid #ece2f8';
+    if (dateStr === today) { bg = '#fff5d8'; border = '2px solid #f0c75e'; }
+    if (effectiveType === 'day') { bg = '#e3f0fd'; color = '#4a90d9'; }
+    if (effectiveType === 'night') { bg = '#ede4fb'; color = '#5b3aa8'; }
+    if (effectiveType === 'rest') { bg = '#e6f4ea'; color = '#2d8a4f'; }
+    if (mark && mark.type === 'important') { bg = '#fde6ef'; color = '#c64a82'; }
+    const noteIcon = mark && mark.note ? ' 📌' : '';
+    html += `<div onclick="selectCalDay('${dateStr}')" style="padding:8px 2px;font-size:13px;background:${bg};color:${color};border:${border};border-radius:6px;cursor:pointer;position:relative">${d}${noteIcon}</div>`;
+  }
+  html += '</div>';
+  $('#calGrid').innerHTML = html;
+  // 每周排班
+  renderWeeklyShifts();
+}
+
+function renderWeeklyShifts() {
+  const labels = {0:'周日',1:'周一',2:'周二',3:'周三',4:'周四',5:'周五',6:'周六'};
+  const types = {day:'白班',night:'夜班',rest:'休息','':'无'};
+  let html = '';
+  for (let i = 1; i <= 7; i++) {
+    const idx = i === 7 ? 0 : i;
+    const v = weeklyShifts[idx] || '';
+    const bg = v === 'day' ? '#e3f0fd' : v === 'night' ? '#ede4fb' : v === 'rest' ? '#e6f4ea' : '#f5f0ff';
+    const color = v === 'day' ? '#4a90d9' : v === 'night' ? '#5b3aa8' : v === 'rest' ? '#2d8a4f' : '#9989b8';
+    html += `<span onclick="toggleWeeklyShift(${idx})" style="padding:5px 10px;background:${bg};color:${color};border-radius:8px;font-size:12px;cursor:pointer;font-weight:600">${labels[idx]}: ${types[v]}</span>`;
+  }
+  $('#weeklyShifts').innerHTML = html;
+}
+
+function toggleWeeklyShift(idx) {
+  const cur = weeklyShifts[idx] || '';
+  weeklyShifts[idx] = cur === '' ? 'day' : cur === 'day' ? 'night' : cur === 'night' ? 'rest' : '';
+  ls.set('weeklyShifts', weeklyShifts);
+  renderCalendar();
+}
+
+function selectCalDay(dateStr) {
+  selectedCalDay = dateStr;
+  const mark = calMarked[dateStr];
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dayOfWeek = new Date(y, m-1, d).getDay();
+  const weekLabels = ['周日','周一','周二','周三','周四','周五','周六'];
+  const weekly = weeklyShifts[dayOfWeek];
+  let info = `${m}月${d}日 · ${weekLabels[dayOfWeek]}`;
+  if (weekly) info += ` · 固定${weekly === 'day' ? '白班☀️' : weekly === 'night' ? '夜班🌙' : '休息😌'}`;
+  if (mark) {
+    info += `<br>标记：${mark.type === 'day' ? '☀️ 白班' : mark.type === 'night' ? '🌙 夜班' : mark.type === 'rest' ? '😌 休息' : '⭐ 重要'}${mark.note ? ' · ' + escapeHtml(mark.note) : ''}`;
+  }
+  info += `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+    <button onclick="markCalDay('day')" style="padding:6px 12px;background:#e3f0fd;color:#4a90d9;border:none;border-radius:8px;font-size:12px;font-weight:600">☀️ 白班</button>
+    <button onclick="markCalDay('night')" style="padding:6px 12px;background:#ede4fb;color:#5b3aa8;border:none;border-radius:8px;font-size:12px;font-weight:600">🌙 夜班</button>
+    <button onclick="markCalDay('rest')" style="padding:6px 12px;background:#e6f4ea;color:#2d8a4f;border:none;border-radius:8px;font-size:12px;font-weight:600">😌 休息</button>
+    <button onclick="markCalDay('important')" style="padding:6px 12px;background:#fde6ef;color:#c64a82;border:none;border-radius:8px;font-size:12px;font-weight:600">⭐ 重要</button>
+    <button onclick="addCalNote()" style="padding:6px 12px;background:#fff5d8;color:#8a6d1a;border:none;border-radius:8px;font-size:12px;font-weight:600">📝 备注</button>
+    ${mark ? `<button onclick="delCalMark()" style="padding:6px 12px;background:#f5f0ff;color:#c64a82;border:none;border-radius:8px;font-size:12px">✕ 删除</button>` : ''}
+  </div>`;
+  $('#calDayInfo').innerHTML = info;
+}
+
+function markCalDay(type) {
+  if (!selectedCalDay) return;
+  const existing = calMarked[selectedCalDay] || {};
+  calMarked[selectedCalDay] = { type, note: existing.note || '' };
+  ls.set('calMarked', calMarked);
+  renderCalendar();
+  selectCalDay(selectedCalDay);
+  toast('已标记 ' + (type === 'day' ? '☀️ 白班' : type === 'night' ? '🌙 夜班' : type === 'rest' ? '😌 休息' : '⭐ 重要'));
+}
+
+function addCalNote() {
+  if (!selectedCalDay) return;
+  const note = prompt('输入备注内容（如：考试、生日、会议等）：', calMarked[selectedCalDay]?.note || '');
+  if (note !== null) {
+    const existing = calMarked[selectedCalDay] || { type: 'important' };
+    calMarked[selectedCalDay] = { type: existing.type || 'important', note };
+    ls.set('calMarked', calMarked);
+    renderCalendar();
+    selectCalDay(selectedCalDay);
+    toast('备注已保存 📝');
+  }
+}
+
+function delCalMark() {
+  if (!selectedCalDay) return;
+  delete calMarked[selectedCalDay];
+  ls.set('calMarked', calMarked);
+  renderCalendar();
+  $('#calDayInfo').innerHTML = '点击日期标记/查看';
+  toast('已删除标记');
+}
+
+$('#calOpenBtn').addEventListener('click', () => { calDate = new Date(); renderCalendar(); $('#calendarModal').classList.add('show'); });
+$('#calPrev').addEventListener('click', () => { calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); });
+$('#calNext').addEventListener('click', () => { calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); });
+
 /* ===== 读书笔记 ===== */
 let bookNotes = ls.get('bookNotes', []);
 function renderNotes() { const list = $('#bookNoteList'); list.innerHTML = ''; bookNotes.slice().reverse().forEach((n, i) => { const realI = bookNotes.length - 1 - i; const div = document.createElement('div'); div.className = 'list-item'; div.innerHTML = `<span class="txt">${escapeHtml(n.text)}<br><span style="font-size:11px;color:#9989b8">${n.time}</span></span><span class="del" data-i="${realI}" data-act="del">×</span>`; list.appendChild(div); }); $('#stNotes') && ($('#stNotes').textContent = bookNotes.length); }
@@ -1020,10 +1297,12 @@ $('#bookNoteList').addEventListener('click', e => { const btn = e.target.closest
 $('#bookNoteBtn').addEventListener('click', () => { $('#noteModal').classList.add('show'); renderNotes(); });
 renderNotes();
 
-/* ===== 作息 + 睡眠记录 ===== */
+/* ===== 作息 + 睡眠记录（夜间/白天补觉/午睡/夜班）===== */
 let routine = ls.get('routine', { sleep: '22:30', wake: '07:00', on: false });
-let sleepLogs = ls.get('sleepLogs', []); // [{date:'2026-7-28', sleep:'23:00', wake:'07:00', duration:480}]
-let summaryMonthOffset = 0; // 0=本月, -1=上月
+let sleepLogs = ls.get('sleepLogs', []); // 夜间睡眠 [{date, sleep, wake, duration}]
+let daySleepLogs = ls.get('daySleepLogs', []); // 白天补觉 [{date, sleep, wake, duration, nightShift}]
+let napLogs = ls.get('napLogs', []); // 午睡 [{date, sleep, wake, duration}]
+let summaryMonthOffset = 0;
 
 $('#sleepTime').value = routine.sleep; $('#wakeTime').value = routine.wake; $('#routineOn').checked = routine.on;
 ['sleepTime','wakeTime'].forEach(id => $(`#${id}`).addEventListener('change', saveRoutine));
@@ -1035,130 +1314,146 @@ function saveRoutine() {
   checkRoutineReminder();
 }
 
-// 计算睡眠时长（分钟），处理跨天
 function calcSleepDuration(sleep, wake) {
   let [sh, sm] = sleep.split(':').map(Number);
   let [wh, wm] = wake.split(':').map(Number);
-  let sMin = sh * 60 + sm;
-  let wMin = wh * 60 + wm;
+  let sMin = sh * 60 + sm, wMin = wh * 60 + wm;
   let diff = wMin - sMin;
-  if (diff < 0) diff += 24 * 60; // 跨天
+  if (diff < 0) diff += 24 * 60;
   return diff;
 }
-
 function formatDuration(mins) {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
+  const h = Math.floor(mins / 60), m = mins % 60;
   return `${h}小时${m}分`;
 }
 
-// 今日睡眠记录
+// === 夜间睡眠 ===
 function loadTodaySleep() {
   const today = todayStr();
   const log = sleepLogs.find(l => l.date === today);
   if (log) {
-    $('#logSleep').value = log.sleep;
-    $('#logWake').value = log.wake;
+    $('#logSleep').value = log.sleep; $('#logWake').value = log.wake;
     $('#sleepDuration').textContent = `💤 睡了 ${formatDuration(log.duration)}`;
-    $('#sleepTodayTag').textContent = '今日已记录 ✅';
-    $('#sleepTodayTag').style.color = '#2d8a4f';
+    $('#sleepTodayTag').textContent = '今日已记录 ✅'; $('#sleepTodayTag').style.color = '#2d8a4f';
   } else {
-    // 默认填入作息设置的时间
-    $('#logSleep').value = routine.sleep;
-    $('#logWake').value = routine.wake;
-    const dur = calcSleepDuration(routine.sleep, routine.wake);
-    $('#sleepDuration').textContent = `预计睡眠 ${formatDuration(dur)}`;
-    $('#sleepTodayTag').textContent = '今日未记录';
-    $('#sleepTodayTag').style.color = '#9989b8';
+    $('#logSleep').value = routine.sleep; $('#logWake').value = routine.wake;
+    $('#sleepDuration').textContent = `预计睡眠 ${formatDuration(calcSleepDuration(routine.sleep, routine.wake))}`;
+    $('#sleepTodayTag').textContent = '今日未记录'; $('#sleepTodayTag').style.color = '#9989b8';
   }
 }
-
-// 实时计算时长
-['logSleep','logWake'].forEach(id => {
-  $(`#${id}`).addEventListener('change', () => {
-    const s = $('#logSleep').value, w = $('#logWake').value;
-    if (s && w) {
-      $('#sleepDuration').textContent = `预计睡眠 ${formatDuration(calcSleepDuration(s, w))}`;
-    }
-  });
-});
-
-// 保存今日睡眠记录
+['logSleep','logWake'].forEach(id => $(`#${id}`).addEventListener('change', () => {
+  const s = $('#logSleep').value, w = $('#logWake').value;
+  if (s && w) $('#sleepDuration').textContent = `预计睡眠 ${formatDuration(calcSleepDuration(s, w))}`;
+}));
 $('#saveSleepLog').addEventListener('click', () => {
   const sleep = $('#logSleep').value, wake = $('#logWake').value;
   if (!sleep || !wake) { toast('请填写入睡和起床时间'); return; }
   const today = todayStr();
-  const duration = calcSleepDuration(sleep, wake);
-  // 移除今日旧记录，再添加
   sleepLogs = sleepLogs.filter(l => l.date !== today);
-  sleepLogs.push({ date: today, sleep, wake, duration });
+  sleepLogs.push({ date: today, sleep, wake, duration: calcSleepDuration(sleep, wake) });
   ls.set('sleepLogs', sleepLogs);
-  $('#sleepDuration').textContent = `💤 睡了 ${formatDuration(duration)}`;
-  $('#sleepTodayTag').textContent = '今日已记录 ✅';
-  $('#sleepTodayTag').style.color = '#2d8a4f';
+  $('#sleepDuration').textContent = `💤 睡了 ${formatDuration(calcSleepDuration(sleep, wake))}`;
+  $('#sleepTodayTag').textContent = '今日已记录 ✅'; $('#sleepTodayTag').style.color = '#2d8a4f';
   renderSleepSummary();
-  toast('睡眠已记录 😴');
+  updateTotalSleep();
+  toast('夜间睡眠已记录 😴');
 });
 
-// 月度睡眠总结
+// === 白天补觉 ===
+function loadTodayDaySleep() {
+  const today = todayStr();
+  const log = daySleepLogs.find(l => l.date === today);
+  if (log) {
+    $('#logDaySleep').value = log.sleep; $('#logDayWake').value = log.wake;
+    $('#logNightShift').checked = log.nightShift;
+    $('#daySleepDuration').textContent = `🌞 补觉 ${formatDuration(log.duration)}`;
+    $('#daySleepTag').textContent = '今日已记录 ✅'; $('#daySleepTag').style.color = '#2d8a4f';
+  } else {
+    $('#daySleepDuration').textContent = '';
+    $('#daySleepTag').textContent = '今日未记录'; $('#daySleepTag').style.color = '#9989b8';
+  }
+}
+['logDaySleep','logDayWake'].forEach(id => $(`#${id}`).addEventListener('change', () => {
+  const s = $('#logDaySleep').value, w = $('#logDayWake').value;
+  if (s && w) $('#daySleepDuration').textContent = `预计补觉 ${formatDuration(calcSleepDuration(s, w))}`;
+}));
+$('#saveDaySleepLog').addEventListener('click', () => {
+  const sleep = $('#logDaySleep').value, wake = $('#logDayWake').value;
+  if (!sleep || !wake) { toast('请填写补觉时间'); return; }
+  const today = todayStr();
+  daySleepLogs = daySleepLogs.filter(l => l.date !== today);
+  daySleepLogs.push({ date: today, sleep, wake, duration: calcSleepDuration(sleep, wake), nightShift: $('#logNightShift').checked });
+  ls.set('daySleepLogs', daySleepLogs);
+  $('#daySleepDuration').textContent = `🌞 补觉 ${formatDuration(calcSleepDuration(sleep, wake))}`;
+  $('#daySleepTag').textContent = '今日已记录 ✅'; $('#daySleepTag').style.color = '#2d8a4f';
+  renderSleepSummary();
+  updateTotalSleep();
+  toast('白天补觉已记录 🌞');
+});
+
+// === 午睡 ===
+function loadTodayNap() {
+  const today = todayStr();
+  const log = napLogs.find(l => l.date === today);
+  if (log) {
+    $('#logNapSleep').value = log.sleep; $('#logNapWake').value = log.wake;
+    $('#napDuration').textContent = `💤 午睡 ${formatDuration(log.duration)}`;
+    $('#napTag').textContent = '今日已记录 ✅'; $('#napTag').style.color = '#2d8a4f';
+  } else {
+    $('#napDuration').textContent = '';
+    $('#napTag').textContent = '今日未记录'; $('#napTag').style.color = '#9989b8';
+  }
+}
+['logNapSleep','logNapWake'].forEach(id => $(`#${id}`).addEventListener('change', () => {
+  const s = $('#logNapSleep').value, w = $('#logNapWake').value;
+  if (s && w) $('#napDuration').textContent = `预计午睡 ${formatDuration(calcSleepDuration(s, w))}`;
+}));
+$('#saveNapLog').addEventListener('click', () => {
+  const sleep = $('#logNapSleep').value, wake = $('#logNapWake').value;
+  if (!sleep || !wake) { toast('请填写午睡时间'); return; }
+  const today = todayStr();
+  napLogs = napLogs.filter(l => l.date !== today);
+  napLogs.push({ date: today, sleep, wake, duration: calcSleepDuration(sleep, wake) });
+  ls.set('napLogs', napLogs);
+  $('#napDuration').textContent = `💤 午睡 ${formatDuration(calcSleepDuration(sleep, wake))}`;
+  $('#napTag').textContent = '今日已记录 ✅'; $('#napTag').style.color = '#2d8a4f';
+  renderSleepSummary();
+  updateTotalSleep();
+  toast('午睡已记录 💤');
+});
+
+// === 月度汇总（夜间+白天补觉+午睡+夜班）===
 function renderSleepSummary() {
   const now = new Date();
   const targetDate = new Date(now.getFullYear(), now.getMonth() + summaryMonthOffset, 1);
-  const year = targetDate.getFullYear();
-  const month = targetDate.getMonth(); // 0-11
+  const year = targetDate.getFullYear(), month = targetDate.getMonth();
   const monthLabel = `${year}年${month + 1}月`;
-  const monthLogs = sleepLogs.filter(l => {
-    const [y, m] = l.date.split('-').map(Number);
-    return y === year && (m - 1) === month;
-  });
+  const inMonth = (date) => { const [y, m] = date.split('-').map(Number); return y === year && (m - 1) === month; };
+
+  const mNight = sleepLogs.filter(l => inMonth(l.date));
+  const mDay = daySleepLogs.filter(l => inMonth(l.date));
+  const mNap = napLogs.filter(l => inMonth(l.date));
+  const mNightShift = mDay.filter(l => l.nightShift);
 
   const container = $('#sleepSummary');
-  if (!monthLogs.length) {
+  if (!mNight.length && !mDay.length && !mNap.length) {
     container.innerHTML = `<div style="text-align:center;padding:16px;color:#9989b8;font-size:13px">${monthLabel}暂无记录<br>开始记录睡眠后这里会显示统计 📊</div>`;
     return;
   }
 
-  const totalMin = monthLogs.reduce((s, l) => s + l.duration, 0);
-  const avgMin = Math.round(totalMin / monthLogs.length);
-  const avgSleep = monthLogs.reduce((s, l) => { const [h] = l.sleep.split(':').map(Number); return s + h; }, 0) / monthLogs.length;
-  const avgWake = monthLogs.reduce((s, l) => { const [h] = l.wake.split(':').map(Number); return s + h; }, 0) / monthLogs.length;
-  const best = monthLogs.reduce((a, b) => a.duration > b.duration ? a : b);
-  const worst = monthLogs.reduce((a, b) => a.duration < b.duration ? a : b);
-
-  // 平均入睡/起床时间（分钟转HH:MM）
-  const avgSleepMin = monthLogs.reduce((s, l) => { const [h, m] = l.sleep.split(':').map(Number); return s + h * 60 + m; }, 0) / monthLogs.length;
-  const avgWakeMin = monthLogs.reduce((s, l) => { const [h, m] = l.wake.split(':').map(Number); return s + h * 60 + m; }, 0) / monthLogs.length;
-  const fmtTime = (mins) => {
-    // 处理跨天：如果入睡时间平均>12点，说明是晚上
-    let h = Math.floor(mins / 60) % 24;
-    let m = Math.round(mins % 60);
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-  };
+  const fmtTime = (mins) => { let h = Math.floor(mins / 60) % 24, m = Math.round(mins % 60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; };
+  const avgTime = (logs, key) => { if (!logs.length) return '--'; const t = logs.reduce((s, l) => { const [h, m] = l[key].split(':').map(Number); return s + h * 60 + m; }, 0) / logs.length; return fmtTime(t); };
+  const avgDur = (logs) => logs.length ? Math.round(logs.reduce((s, l) => s + l.duration, 0) / logs.length) : 0;
 
   container.innerHTML = `
-    <div style="font-size:12px;color:#9989b8;margin-bottom:8px">${monthLabel} · 共记录 ${monthLogs.length} 天</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div style="padding:10px;background:#fff;border-radius:10px;text-align:center">
-        <div style="font-size:11px;color:#9989b8">平均睡眠</div>
-        <div style="font-size:18px;font-weight:700;color:#5b3aa8;margin-top:2px">${formatDuration(avgMin)}</div>
-      </div>
-      <div style="padding:10px;background:#fff;border-radius:10px;text-align:center">
-        <div style="font-size:11px;color:#9989b8">平均入睡</div>
-        <div style="font-size:18px;font-weight:700;color:#6a4cb0;margin-top:2px">${fmtTime(avgSleepMin)}</div>
-      </div>
-      <div style="padding:10px;background:#fff;border-radius:10px;text-align:center">
-        <div style="font-size:11px;color:#9989b8">平均起床</div>
-        <div style="font-size:18px;font-weight:700;color:#6a4cb0;margin-top:2px">${fmtTime(avgWakeMin)}</div>
-      </div>
-      <div style="padding:10px;background:#fff;border-radius:10px;text-align:center">
-        <div style="font-size:11px;color:#9989b8">睡眠天数</div>
-        <div style="font-size:18px;font-weight:700;color:#c64a82;margin-top:2px">${monthLogs.length}天</div>
-      </div>
+    <div style="font-size:12px;color:#9989b8;margin-bottom:8px">${monthLabel}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div style="padding:10px;background:#fff;border-radius:10px;text-align:center"><div style="font-size:11px;color:#9989b8">🌙 夜间睡眠</div><div style="font-size:16px;font-weight:700;color:#5b3aa8;margin-top:2px">${mNight.length}天 · 均${formatDuration(avgDur(mNight))}</div></div>
+      <div style="padding:10px;background:#fff;border-radius:10px;text-align:center"><div style="font-size:11px;color:#9989b8">🌙 夜班天数</div><div style="font-size:16px;font-weight:700;color:#c64a82;margin-top:2px">${mNightShift.length}天</div></div>
+      <div style="padding:10px;background:#fff;border-radius:10px;text-align:center"><div style="font-size:11px;color:#9989b8">🌞 白天补觉</div><div style="font-size:16px;font-weight:700;color:#8a6d1a;margin-top:2px">${mDay.length}天 · 均${formatDuration(avgDur(mDay))}</div></div>
+      <div style="padding:10px;background:#fff;border-radius:10px;text-align:center"><div style="font-size:11px;color:#9989b8">💤 午睡</div><div style="font-size:16px;font-weight:700;color:#2d8a4f;margin-top:2px">${mNap.length}天 · 均${formatDuration(avgDur(mNap))}</div></div>
     </div>
-    <div style="margin-top:10px;padding:10px;background:#fff;border-radius:10px;font-size:12px;color:#4a3b6b">
-      <div>🟢 睡得最好：${best.date.split('-')[1]}月${best.date.split('-')[2]}日 · ${formatDuration(best.duration)}</div>
-      <div style="margin-top:4px">🔴 睡得最少：${worst.date.split('-')[1]}月${worst.date.split('-')[2]}日 · ${formatDuration(worst.duration)}</div>
-    </div>
+    ${mNight.length ? `<div style="padding:8px 10px;background:#fff;border-radius:8px;font-size:12px;color:#4a3b6b">🌙 平均入睡 ${avgTime(mNight,'sleep')} · 平均起床 ${avgTime(mNight,'wake')}</div>` : ''}
   `;
 }
 
@@ -1169,62 +1464,107 @@ $('#prevMonthBtn').addEventListener('click', () => {
   const now = new Date();
   const td = new Date(now.getFullYear(), now.getMonth() + summaryMonthOffset, 1);
   $('#prevMonthBtn').textContent = `◀ ${td.getMonth()+1}月`;
-  if (summaryMonthOffset < 0) {
-    // 加一个"回到本月"的入口
+  if (summaryMonthOffset < 0 && !$('#nextMonthBtn')) {
     $('#prevMonthBtn').insertAdjacentHTML('afterend', '<button id="nextMonthBtn" style="background:none;padding:0;font-size:12px;color:#c64a82;margin-left:8px">下月 ▶</button>');
     $('#nextMonthBtn').onclick = () => { summaryMonthOffset++; renderSleepSummary(); const n=new Date(); const t=new Date(n.getFullYear(),n.getMonth()+summaryMonthOffset,1); $('#prevMonthBtn').textContent=`◀ ${t.getMonth()+1}月`; if(summaryMonthOffset>=0&&$('#nextMonthBtn'))$('#nextMonthBtn').remove(); };
   }
 });
 
-// 到点提醒（每分钟检查一次）
+// === 到点提醒（弹窗+铃声+语音）===
+let alarmAudio = null;
+function playAlarm() {
+  // 用 Web Audio API 生成铃声（不需要外部文件）
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    for (let i = 0; i < 3; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880; osc.type = 'sine';
+      const start = ctx.currentTime + i * 0.6;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.3, start + 0.05);
+      gain.gain.linearRampToValueAtTime(0, start + 0.4);
+      osc.start(start); osc.stop(start + 0.4);
+    }
+  } catch(e) {}
+}
 function checkRoutineReminder() {
   if (!routine.on) return;
   const now = new Date();
-  const hh = String(now.getHours()).padStart(2, '0');
-  const mm = String(now.getMinutes()).padStart(2, '0');
-  const cur = `${hh}:${mm}`;
+  const cur = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const today = todayStr();
   const remindKey = `remind_${today}`;
   const reminded = ls.get(remindKey, {});
-
   if (cur === routine.sleep && !reminded.sleep) {
-    reminded.sleep = true;
-    ls.set(remindKey, reminded);
+    reminded.sleep = true; ls.set(remindKey, reminded);
     toast('🌙 到睡觉时间啦，该放下手机了！');
-    if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance('该睡觉啦，晚安');
-      u.lang = 'zh-CN'; u.rate = 0.9;
-      setTimeout(() => speechSynthesis.speak(u), 500);
-    }
+    playAlarm();
+    if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance('该睡觉啦，放下手机，晚安'); u.lang = 'zh-CN'; u.rate = 0.9; setTimeout(() => speechSynthesis.speak(u), 600); }
   }
   if (cur === routine.wake && !reminded.wake) {
-    reminded.wake = true;
-    ls.set(remindKey, reminded);
+    reminded.wake = true; ls.set(remindKey, reminded);
     toast('☀️ 起床啦！新的一天开始啦～');
-    if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance('早上好，该起床啦');
-      u.lang = 'zh-CN'; u.rate = 0.9;
-      setTimeout(() => speechSynthesis.speak(u), 500);
-    }
+    playAlarm();
+    if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance('早上好，该起床啦'); u.lang = 'zh-CN'; u.rate = 0.9; setTimeout(() => speechSynthesis.speak(u), 600); }
   }
 }
-setInterval(checkRoutineReminder, 60000);
+setInterval(checkRoutineReminder, 30000);
 checkRoutineReminder();
+
+// 今日总睡眠（夜间+白天补觉+午睡）
+function updateTotalSleep() {
+  const today = todayStr();
+  const night = sleepLogs.find(l => l.date === today);
+  const day = daySleepLogs.find(l => l.date === today);
+  const nap = napLogs.find(l => l.date === today);
+  const total = (night ? night.duration : 0) + (day ? day.duration : 0) + (nap ? nap.duration : 0);
+  if (total > 0) {
+    $('#totalSleepToday').textContent = `⏰ 今日共睡 ${formatDuration(total)}`;
+    let detail = [];
+    if (night) detail.push(`🌙夜间${formatDuration(night.duration)}`);
+    if (day) detail.push(`🌞补觉${formatDuration(day.duration)}${day.nightShift?'(夜班)':''}`);
+    if (nap) detail.push(`💤午睡${formatDuration(nap.duration)}`);
+    $('#totalSleepDetail').textContent = detail.join(' · ');
+  } else {
+    $('#totalSleepToday').textContent = '暂无记录';
+    $('#totalSleepDetail').textContent = '记录睡眠后这里会显示今日总睡眠时间';
+  }
+}
 
 // 初始化
 loadTodaySleep();
+loadTodayDaySleep();
+loadTodayNap();
+updateTotalSleep();
 renderSleepSummary();
 
 /* ===== 待办 ===== */
 let todos = ls.get('todos', []);
 function renderTodos() {
-  const list = $('#todoList'), prev = $('#todoPreview'); list.innerHTML = ''; if (prev) prev.innerHTML = '';
+  const list = $('#todoList'), prev = $('#todoPreview'), prevHome = $('#todoPreviewHome');
+  list.innerHTML = ''; if (prev) prev.innerHTML = ''; if (prevHome) prevHome.innerHTML = '';
   todos.forEach((t, i) => {
     const div = document.createElement('div'); div.className = 'list-item' + (t.done ? ' done' : ''); div.innerHTML = `<input type="checkbox" ${t.done ? 'checked' : ''} data-i="${i}" data-act="toggle" style="margin-right:8px"/><span class="txt" style="${t.done?'text-decoration:line-through;color:#a89bc8':''}">${escapeHtml(t.text)}</span><span class="del" data-i="${i}" data-act="del">×</span>`;
     list.appendChild(div);
   });
   const pending = todos.filter(t => !t.done);
+  const doneCount = todos.length - pending.length;
+  // 生活小窝里的预览
   if (prev && pending.length) { const d = document.createElement('div'); d.style.cssText = 'font-size:12px;color:#9989b8'; d.textContent = `还有 ${pending.length} 项待办`; prev.appendChild(d); }
+  // 首页学习计划里的待办预览
+  if (prevHome) {
+    if (todos.length === 0) {
+      prevHome.innerHTML = '<span style="font-size:11px;color:#9989b8">暂无待办，点击管理添加</span>';
+    } else {
+      // 显示前3条未完成的
+      const showList = pending.slice(0, 3);
+      let html = showList.map(t => `<div style="font-size:12px;color:#4a3b6b;padding:2px 0">☐ ${escapeHtml(t.text)}</div>`).join('');
+      if (pending.length > 3) html += `<div style="font-size:11px;color:#9989b8;margin-top:2px">还有 ${pending.length - 3} 项...</div>`;
+      if (pending.length === 0 && doneCount > 0) html = `<div style="font-size:12px;color:#2d8a4f">✅ ${doneCount}项待办全部完成！</div>`;
+      prevHome.innerHTML = html;
+    }
+  }
 }
 $('#todoList').addEventListener('click', e => { const btn = e.target.closest('[data-act]'); if (!btn) return; const i = +btn.dataset.i; if (btn.dataset.act === 'del') { todos.splice(i, 1); ls.set('todos', todos); renderTodos(); } else { todos[i].done = !todos[i].done; ls.set('todos', todos); renderTodos(); } });
 $('#addTodoBtn').addEventListener('click', () => { const v = $('#todoInput').value.trim(); if (!v) return; todos.push({ text: v, done: false }); ls.set('todos', todos); $('#todoInput').value = ''; renderTodos(); });
@@ -1294,23 +1634,36 @@ $('#sportLog').addEventListener('click', e => { const btn = e.target.closest('[d
 renderSportTypes(); renderSportLog();
 
 /* ===== 记账 ===== */
-const billCats = {'小吃货':'🍰','不爱走路的懒虫':'🐷','出门玩耍':'🎮','走在时尚前沿的美人儿':'👗','生活用品小零件':'🧴'};
+const billCats = {'小吃货':'🍰','不爱走路的懒虫':'🐷','出门玩耍':'🎮','走在时尚前沿的美人儿':'👗','生活用品小零件':'🧴','其他支出':'📦'};
 let activeCat = '小吃货';
 let bills = ls.get('bills', []);
 $$('.bill-cat').forEach(c => c.addEventListener('click', () => { activeCat = c.dataset.cat; $$('.bill-cat').forEach(x => x.classList.toggle('active', x === c)); }));
 function renderBills() {
   const sums = {}; Object.keys(billCats).forEach(k => sums[k] = 0); bills.forEach(b => sums[b.cat] += (+b.amount || 0));
   Object.keys(billCats).forEach(k => $(`#sum${k}`).textContent = '¥' + sums[k].toFixed(0));
-  $('#billList').innerHTML = bills.slice().reverse().map((b, i) => `<div class="list-item"><span><span class="tag" style="background:#fde6ef;color:#c64a82">${billCats[b.cat]} ${b.cat}</span><span class="txt">${escapeHtml(b.item)}</span></span><span style="font-weight:700;color:#c64a82">-¥${(+b.amount).toFixed(2)}</span><span class="del" data-i="${bills.length - 1 - i}" data-act="del">×</span></div>`).join('');
-  const total = Object.values(sums).reduce((a,b)=>a+b,0);
-  $('#billTileSub').textContent = `本月 ${total.toFixed(0)} 元`;
-  $('#myBillTotal').textContent = total.toFixed(2);
+  $('#billList').innerHTML = bills.slice().reverse().map((b, i) => `<div class="list-item"><span><span class="tag" style="background:#fde6ef;color:#c64a82">${billCats[b.cat]||'📦'} ${b.cat}</span><span class="txt">${escapeHtml(b.item)}</span></span><span style="font-weight:700;color:#c64a82">-¥${(+b.amount).toFixed(2)}</span><span class="del" data-i="${bills.length - 1 - i}" data-act="del">×</span></div>`).join('');
+  // 每日/每周/每月统计
+  const today = todayStr();
+  const todayBills = bills.filter(b => b.date === today);
+  const todayTotal = todayBills.reduce((s, b) => s + (+b.amount || 0), 0);
+  // 本周（周一开始）
+  const now = new Date();
+  const dayOfWeek = now.getDay() || 7; // 周日=7
+  const monday = new Date(now); monday.setDate(now.getDate() - dayOfWeek + 1); monday.setHours(0,0,0,0);
+  const weekBills = bills.filter(b => { const [y,m,d] = b.date.split('-').map(Number); const bd = new Date(y, m-1, d); return bd >= monday; });
+  const weekTotal = weekBills.reduce((s, b) => s + (+b.amount || 0), 0);
+  // 本月
   const cm = monthStr();
   const monthBills = bills.filter(b => b.date.startsWith(cm));
   const monthTotal = monthBills.reduce((s, b) => s + (+b.amount || 0), 0);
+  $('#billToday').textContent = '¥' + todayTotal.toFixed(2);
+  $('#billWeek').textContent = '¥' + weekTotal.toFixed(2);
+  $('#billMonth').textContent = '¥' + monthTotal.toFixed(2);
+  $('#billTileSub').textContent = `本月 ${monthTotal.toFixed(0)} 元`;
+  $('#myBillTotal').textContent = monthTotal.toFixed(2);
   const counts = {}; monthBills.forEach(b => counts[b.cat] = (counts[b.cat] || 0) + (+b.amount || 0));
   const top = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
-  $('#billMonthly').innerHTML = `<b>本月账单总结</b><div>总支出 ¥${monthTotal.toFixed(2)} · ${monthBills.length} 笔 · 最高：${top ? top[0] : '暂无'}</div>`;
+  $('#billMonthly').innerHTML = `<b>本月账单总结</b><div>总支出 ¥${monthTotal.toFixed(2)} · ${monthBills.length} 笔 · 最高：${top ? top[0] : '暂无'}<br>今日 ¥${todayTotal.toFixed(2)} · 本周 ¥${weekTotal.toFixed(2)}</div>`;
 }
 $('#addBillBtn').addEventListener('click', () => { const item = $('#billItem').value.trim(), amount = $('#billAmount').value.trim(); if (!item || !amount) { toast('填写完整'); return; } bills.push({ cat: activeCat, item, amount: +amount, date: todayStr() }); ls.set('bills', bills); $('#billItem').value = ''; $('#billAmount').value = ''; renderBills(); toast('已记账'); });
 $('#billList').addEventListener('click', e => { const btn = e.target.closest('[data-act="del"]'); if (!btn) return; bills.splice(+btn.dataset.i, 1); ls.set('bills', bills); renderBills(); });
