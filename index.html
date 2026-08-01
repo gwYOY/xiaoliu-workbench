@@ -454,6 +454,20 @@ ul { list-style: none; }
       <div style="flex:1;padding:10px;background:#fff5d8;border-radius:10px;text-align:center"><div style="font-size:11px;color:#8a6d1a">本周</div><div id="billWeek" style="font-size:16px;font-weight:700;color:#8a6d1a;margin-top:2px">¥0</div></div>
       <div style="flex:1;padding:10px;background:#ede4fb;border-radius:10px;text-align:center"><div style="font-size:11px;color:#5b3aa8">本月</div><div id="billMonth" style="font-size:16px;font-weight:700;color:#5b3aa8;margin-top:2px">¥0</div></div>
     </div>
+    <!-- 月度收入与预算 -->
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div style="flex:1;padding:12px;background:#e6f9ee;border-radius:12px">
+        <div style="font-size:12px;color:#2d8a4f;font-weight:600">💵 又发财啦（本月收入）</div>
+        <div id="incomeTotal" style="font-size:18px;font-weight:700;color:#2d8a4f;margin:4px 0">¥0</div>
+        <div style="display:flex;gap:4px"><input type="text" id="incomeSource" placeholder="来源" style="flex:1;padding:5px 8px;border:1px solid #bfe6cc;border-radius:8px;font-size:12px" /><input type="number" id="incomeAmount" placeholder="金额" style="flex:none;width:70px;padding:5px 8px;border:1px solid #bfe6cc;border-radius:8px;font-size:12px" /><button id="addIncomeBtn" style="padding:5px 10px;background:#2d8a4f;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600">+</button></div>
+        <div id="incomeList" style="margin-top:8px"></div>
+      </div>
+      <div style="flex:1;padding:12px;background:#fff5d8;border-radius:12px">
+        <div style="font-size:12px;color:#8a6d1a;font-weight:600">🌸 省着花（本月预算）</div>
+        <div style="display:flex;align-items:center;gap:6px;margin:4px 0"><span style="font-size:13px;color:#8a6d1a">计划</span><input type="number" id="budgetInput" placeholder="设个目标" style="flex:1;padding:5px 8px;border:1px solid #f0d878;border-radius:8px;font-size:13px;width:80px" /><button id="saveBudgetBtn" style="padding:5px 10px;background:#8a6d1a;color:#fff;border:none;border-radius:8px;font-size:11px">存</button></div>
+        <div id="budgetStatus" style="font-size:12px;color:#8a6d1a;line-height:1.6">还没设预算哦</div>
+      </div>
+    </div>
     <div id="billList"></div>
     <div class="summary-card" id="billMonthly"></div>
   </div>
@@ -1696,6 +1710,8 @@ renderSportTypes(); renderSportLog();
 const billCats = {'小吃货':'🍰','不爱走路的懒虫':'🐷','出门玩耍':'🎮','走在时尚前沿的美人儿':'👗','生活用品小零件':'🧴','其他支出':'📦'};
 let activeCat = '小吃货';
 let bills = ls.get('bills', []);
+let incomes = ls.get('incomes', []); // {source, amount, date}
+let budgets = ls.get('budgets', {}); // {'2026-08': 3000}
 $$('.bill-cat').forEach(c => c.addEventListener('click', () => { activeCat = c.dataset.cat; $$('.bill-cat').forEach(x => x.classList.toggle('active', x === c)); }));
 function renderBills() {
   const sums = {}; Object.keys(billCats).forEach(k => sums[k] = 0); bills.forEach(b => sums[b.cat] += (+b.amount || 0));
@@ -1723,7 +1739,49 @@ function renderBills() {
   const counts = {}; monthBills.forEach(b => counts[b.cat] = (counts[b.cat] || 0) + (+b.amount || 0));
   const top = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
   $('#billMonthly').innerHTML = `<b>本月账单总结</b><div>总支出 ¥${monthTotal.toFixed(2)} · ${monthBills.length} 笔 · 最高：${top ? top[0] : '暂无'}<br>今日 ¥${todayTotal.toFixed(2)} · 本周 ¥${weekTotal.toFixed(2)}</div>`;
+  // 收入与预算
+  renderIncomeBudget(monthTotal);
 }
+function renderIncomeBudget(monthTotal) {
+  const cm = monthStr();
+  const monthIncomes = incomes.filter(i => i.date.startsWith(cm));
+  const incomeTotal = monthIncomes.reduce((s, i) => s + (+i.amount || 0), 0);
+  $('#incomeTotal').textContent = '¥' + incomeTotal.toFixed(2);
+  $('#incomeList').innerHTML = monthIncomes.slice().reverse().map((inc, i) => {
+    const realI = incomes.length - 1 - incomes.indexOf(inc);
+    return `<div class="list-item" style="padding:6px 8px;margin-bottom:4px"><span class="txt" style="font-size:12px">${escapeHtml(inc.source)} <span style="color:#2d8a4f;font-weight:600">+¥${(+inc.amount).toFixed(2)}</span></span><span class="del" data-i="${realI}" data-act="delInc">×</span></div>`;
+  }).join('') || '<div style="font-size:11px;color:#9989b8;padding:4px">本月还没记收入</div>';
+  // 预算
+  const budget = budgets[cm];
+  if (budget && budget > 0) {
+    const remain = budget - monthTotal;
+    const pct = Math.min(100, (monthTotal / budget * 100)).toFixed(0);
+    const barColor = remain >= 0 ? '#8a6d1a' : '#c64a82';
+    $('#budgetStatus').innerHTML = `计划 ¥${budget.toFixed(0)} · 已花 ${pct}%<div style="background:#f0e8c8;border-radius:6px;height:8px;margin:4px 0;overflow:hidden"><div style="background:${barColor};height:100%;width:${pct}%"></div></div>${remain >= 0 ? `剩 ¥${remain.toFixed(2)} 💚` : `超 ¥${(-remain).toFixed(2)} ⚠️`}`;
+  } else {
+    $('#budgetStatus').textContent = '还没设预算哦';
+  }
+}
+$('#addIncomeBtn').addEventListener('click', () => {
+  const source = $('#incomeSource').value.trim(), amount = $('#incomeAmount').value.trim();
+  if (!source || !amount) { toast('填写完整'); return; }
+  incomes.push({ source, amount: +amount, date: todayStr() });
+  ls.set('incomes', incomes);
+  $('#incomeSource').value = ''; $('#incomeAmount').value = '';
+  renderBills(); toast('又发财啦 💵');
+});
+$('#incomeSource').addEventListener('keydown', e => { if (e.key === 'Enter') $('#incomeAmount').focus(); });
+$('#incomeAmount').addEventListener('keydown', e => { if (e.key === 'Enter') $('#addIncomeBtn').click(); });
+$('#incomeList').addEventListener('click', e => { const btn = e.target.closest('[data-act="delInc"]'); if (!btn) return; incomes.splice(+btn.dataset.i, 1); ls.set('incomes', incomes); renderBills(); });
+$('#saveBudgetBtn').addEventListener('click', () => {
+  const v = $('#budgetInput').value.trim();
+  if (!v || +v <= 0) { toast('设个金额吧'); return; }
+  budgets[monthStr()] = +v;
+  ls.set('budgets', budgets);
+  $('#budgetInput').value = '';
+  renderBills(); toast('预算已设置 🌸');
+});
+$('#budgetInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveBudgetBtn').click(); });
 $('#addBillBtn').addEventListener('click', () => { const item = $('#billItem').value.trim(), amount = $('#billAmount').value.trim(); if (!item || !amount) { toast('填写完整'); return; } bills.push({ cat: activeCat, item, amount: +amount, date: todayStr() }); ls.set('bills', bills); $('#billItem').value = ''; $('#billAmount').value = ''; renderBills(); toast('已记账'); });
 $('#billList').addEventListener('click', e => { const btn = e.target.closest('[data-act="del"]'); if (!btn) return; bills.splice(+btn.dataset.i, 1); ls.set('bills', bills); renderBills(); });
 renderBills();
