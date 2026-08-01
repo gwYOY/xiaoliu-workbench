@@ -478,7 +478,7 @@ ul { list-style: none; }
 <div class="modal" id="todoModal"><div class="modal-mask"></div><div class="modal-card">
   <div class="modal-head"><h3>📝 待办清单</h3><button class="modal-close" data-close>×</button></div>
   <div class="modal-body">
-    <div class="form-row"><input type="text" id="todoInput" placeholder="写一件要做的事…" maxlength="40" /><button id="addTodoBtn">添加</button></div>
+    <div class="form-row"><input type="text" id="todoInput" placeholder="写一件要做的事…" maxlength="200" /><button id="addTodoBtn">添加</button></div>
     <div id="todoList"></div>
   </div>
 </div></div>
@@ -494,8 +494,8 @@ ul { list-style: none; }
 <div class="modal" id="treeModal"><div class="modal-mask"></div><div class="modal-card">
   <div class="modal-head"><h3>🌳 胡思乱想树洞</h3><button class="modal-close" data-close>×</button></div>
   <div class="modal-body">
-    <textarea class="textarea" id="treeInput" placeholder="今天的小想法、小情绪、小确幸…" maxlength="500"></textarea>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:#9989b8"><span id="treeCount">0 / 500</span><button class="form-row" style="padding:8px 16px" id="saveTreeBtn">存进树洞</button></div>
+    <textarea class="textarea" id="treeInput" placeholder="今天的小想法、小情绪、小确幸…" maxlength="2000"></textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:#9989b8"><span id="treeCount">0 / 2000</span><button class="form-row" style="padding:8px 16px" id="saveTreeBtn">存进树洞</button></div>
     <div id="treeList" style="margin-top:14px"></div>
   </div>
 </div></div>
@@ -503,8 +503,8 @@ ul { list-style: none; }
 <div class="modal" id="noteModal"><div class="modal-mask"></div><div class="modal-card">
   <div class="modal-head"><h3>📝 每日看书感想 & 重点笔记</h3><button class="modal-close" data-close>×</button></div>
   <div class="modal-body">
-    <textarea class="textarea" id="bookNoteInput" placeholder="今天读了什么？有什么感想或重点？" maxlength="500"></textarea>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:#9989b8"><span id="noteCount">0 / 500</span><button class="form-row" style="padding:8px 16px" id="saveBookNote">保存笔记</button></div>
+    <textarea class="textarea" id="bookNoteInput" placeholder="今天读了什么？有什么感想或重点？" maxlength="2000"></textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:#9989b8"><span id="noteCount">0 / 2000</span><button class="form-row" style="padding:8px 16px" id="saveBookNote">保存笔记</button></div>
     <div id="bookNoteList" style="margin-top:14px"></div>
   </div>
 </div></div>
@@ -1290,10 +1290,30 @@ $('#calNext').addEventListener('click', () => { calDate.setMonth(calDate.getMont
 
 /* ===== 读书笔记 ===== */
 let bookNotes = ls.get('bookNotes', []);
-function renderNotes() { const list = $('#bookNoteList'); list.innerHTML = ''; bookNotes.slice().reverse().forEach((n, i) => { const realI = bookNotes.length - 1 - i; const div = document.createElement('div'); div.className = 'list-item'; div.innerHTML = `<span class="txt">${escapeHtml(n.text)}<br><span style="font-size:11px;color:#9989b8">${n.time}</span></span><span class="del" data-i="${realI}" data-act="del">×</span>`; list.appendChild(div); }); $('#stNotes') && ($('#stNotes').textContent = bookNotes.length); }
-$('#bookNoteInput').addEventListener('input', e => { $('#noteCount').textContent = `${e.target.value.length} / 500`; });
-$('#saveBookNote').addEventListener('click', () => { const v = $('#bookNoteInput').value.trim(); if (!v) { toast('写点笔记吧'); return; } const d = new Date(); bookNotes.push({ text: v, time: `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` }); ls.set('bookNotes', bookNotes); $('#bookNoteInput').value = ''; $('#noteCount').textContent = '0 / 500'; renderNotes(); toast('笔记保存成功 📖'); });
-$('#bookNoteList').addEventListener('click', e => { const btn = e.target.closest('[data-act="del"]'); if (!btn) return; bookNotes.splice(+btn.dataset.i, 1); ls.set('bookNotes', bookNotes); renderNotes(); });
+let editingNoteIdx = -1;
+function renderNotes() { const list = $('#bookNoteList'); list.innerHTML = ''; bookNotes.slice().reverse().forEach((n, i) => { const realI = bookNotes.length - 1 - i; const div = document.createElement('div'); div.className = 'list-item'; div.innerHTML = `<span class="txt">${escapeHtml(n.text)}<br><span style="font-size:11px;color:#9989b8">${n.time}</span></span><button style="padding:2px 8px;background:#f0e8fa;border-radius:999px;font-size:11px;color:#7a5cc0;margin-right:4px" data-i="${realI}" data-act="edit">✏️</button><span class="del" data-i="${realI}" data-act="del">×</span>`; list.appendChild(div); }); $('#stNotes') && ($('#stNotes').textContent = bookNotes.length); }
+$('#bookNoteInput').addEventListener('input', e => { $('#noteCount').textContent = `${e.target.value.length} / 2000`; });
+$('#saveBookNote').addEventListener('click', () => {
+  const v = $('#bookNoteInput').value.trim();
+  if (!v) { toast('写点笔记吧'); return; }
+  if (editingNoteIdx >= 0) {
+    bookNotes[editingNoteIdx].text = v;
+    editingNoteIdx = -1;
+    $('#saveBookNote').textContent = '保存笔记';
+    toast('已修改 ✏️');
+  } else {
+    const d = new Date();
+    bookNotes.push({ text: v, time: `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` });
+    toast('笔记保存成功 📖');
+  }
+  ls.set('bookNotes', bookNotes); $('#bookNoteInput').value = ''; $('#noteCount').textContent = '0 / 2000'; renderNotes();
+});
+$('#bookNoteList').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'); if (!btn) return;
+  const i = +btn.dataset.i;
+  if (btn.dataset.act === 'del') { bookNotes.splice(i, 1); if (editingNoteIdx === i) { editingNoteIdx = -1; $('#saveBookNote').textContent = '保存笔记'; $('#bookNoteInput').value = ''; $('#noteCount').textContent = '0 / 2000'; } ls.set('bookNotes', bookNotes); renderNotes(); }
+  else if (btn.dataset.act === 'edit') { editingNoteIdx = i; $('#bookNoteInput').value = bookNotes[i].text; $('#noteCount').textContent = `${bookNotes[i].text.length} / 2000`; $('#saveBookNote').textContent = '更新'; $('#bookNoteInput').focus(); renderNotes(); toast('正在编辑，改完点「更新」'); }
+});
 $('#bookNoteBtn').addEventListener('click', () => { $('#noteModal').classList.add('show'); renderNotes(); });
 renderNotes();
 
@@ -1541,13 +1561,20 @@ renderSleepSummary();
 
 /* ===== 待办 ===== */
 let todos = ls.get('todos', []);
+let editingTodoIdx = -1;
 function renderTodos() {
   const list = $('#todoList'), prev = $('#todoPreview'), prevHome = $('#todoPreviewHome');
   list.innerHTML = ''; if (prev) prev.innerHTML = ''; if (prevHome) prevHome.innerHTML = '';
   todos.forEach((t, i) => {
-    const div = document.createElement('div'); div.className = 'list-item' + (t.done ? ' done' : ''); div.innerHTML = `<input type="checkbox" ${t.done ? 'checked' : ''} data-i="${i}" data-act="toggle" style="margin-right:8px"/><span class="txt" style="${t.done?'text-decoration:line-through;color:#a89bc8':''}">${escapeHtml(t.text)}</span><span class="del" data-i="${i}" data-act="del">×</span>`;
+    const div = document.createElement('div'); div.className = 'list-item' + (t.done ? ' done' : '');
+    if (i === editingTodoIdx) {
+      div.innerHTML = `<input type="text" class="todo-edit-input" value="${escapeHtml(t.text)}" maxlength="200" data-i="${i}" data-act="save" style="flex:1;padding:6px 10px;border:1px solid #c9b3e8;border-radius:8px;font-size:13px;background:#fff"/><button style="padding:4px 10px;background:#ece4fb;border-radius:999px;font-size:12px;color:#6a4cb0;font-weight:600;margin-left:6px" data-i="${i}" data-act="save">✓</button>`;
+    } else {
+      div.innerHTML = `<input type="checkbox" ${t.done ? 'checked' : ''} data-i="${i}" data-act="toggle" style="margin-right:8px"/><span class="txt" style="${t.done?'text-decoration:line-through;color:#a89bc8':''}">${escapeHtml(t.text)}</span><button style="padding:2px 8px;background:#f0e8fa;border-radius:999px;font-size:11px;color:#7a5cc0;margin-right:4px" data-i="${i}" data-act="edit">✏️</button><span class="del" data-i="${i}" data-act="del">×</span>`;
+    }
     list.appendChild(div);
   });
+  if (editingTodoIdx >= 0) { const ei = list.querySelector('.todo-edit-input'); if (ei) { ei.focus(); ei.setSelectionRange(ei.value.length, ei.value.length); } }
   const pending = todos.filter(t => !t.done);
   const doneCount = todos.length - pending.length;
   // 生活小窝里的预览
@@ -1566,7 +1593,19 @@ function renderTodos() {
     }
   }
 }
-$('#todoList').addEventListener('click', e => { const btn = e.target.closest('[data-act]'); if (!btn) return; const i = +btn.dataset.i; if (btn.dataset.act === 'del') { todos.splice(i, 1); ls.set('todos', todos); renderTodos(); } else { todos[i].done = !todos[i].done; ls.set('todos', todos); renderTodos(); } });
+$('#todoList').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'); if (!btn) return;
+  const i = +btn.dataset.i;
+  if (btn.dataset.act === 'del') { todos.splice(i, 1); editingTodoIdx = -1; ls.set('todos', todos); renderTodos(); }
+  else if (btn.dataset.act === 'edit') { editingTodoIdx = i; renderTodos(); }
+  else if (btn.dataset.act === 'save') { const inp = btn.closest('.list-item').querySelector('.todo-edit-input'); const v = inp.value.trim(); if (v) { todos[i].text = v; ls.set('todos', todos); } editingTodoIdx = -1; renderTodos(); toast('已修改 ✏️'); }
+  else { todos[i].done = !todos[i].done; ls.set('todos', todos); renderTodos(); }
+});
+$('#todoList').addEventListener('keydown', e => {
+  if (!e.target.classList.contains('todo-edit-input')) return;
+  if (e.key === 'Enter') { const i = +e.target.dataset.i; const v = e.target.value.trim(); if (v) { todos[i].text = v; ls.set('todos', todos); } editingTodoIdx = -1; renderTodos(); toast('已修改 ✏️'); }
+  else if (e.key === 'Escape') { editingTodoIdx = -1; renderTodos(); }
+});
 $('#addTodoBtn').addEventListener('click', () => { const v = $('#todoInput').value.trim(); if (!v) return; todos.push({ text: v, done: false }); ls.set('todos', todos); $('#todoInput').value = ''; renderTodos(); });
 $('#todoInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#addTodoBtn').click(); });
 renderTodos();
@@ -1589,14 +1628,34 @@ renderHabits();
 
 /* ===== 树洞 ===== */
 let trees = ls.get('trees', []);
+let editingTreeIdx = -1;
 function renderTrees() {
   const list = $('#treeList'), prev = $('#treePreview'); list.innerHTML = ''; if (prev) prev.innerHTML = '';
-  trees.slice().reverse().forEach((t, i) => { const realI = trees.length - 1 - i; const div = document.createElement('div'); div.className = 'list-item'; div.innerHTML = `<span class="txt">${escapeHtml(t.text)}<br><span style="font-size:11px;color:#9989b8">${t.time}</span></span><span class="del" data-i="${realI}" data-act="del">×</span>`; list.appendChild(div); });
+  trees.slice().reverse().forEach((t, i) => { const realI = trees.length - 1 - i; const div = document.createElement('div'); div.className = 'list-item'; div.innerHTML = `<span class="txt">${escapeHtml(t.text)}<br><span style="font-size:11px;color:#9989b8">${t.time}</span></span><button style="padding:2px 8px;background:#f0e8fa;border-radius:999px;font-size:11px;color:#7a5cc0;margin-right:4px" data-i="${realI}" data-act="edit">✏️</button><span class="del" data-i="${realI}" data-act="del">×</span>`; list.appendChild(div); });
   if (prev && trees.length) { const d = document.createElement('div'); d.style.cssText = 'font-size:12px;color:#9989b8'; d.textContent = `已藏 ${trees.length} 条心事`; prev.appendChild(d); }
 }
-$('#saveTreeBtn').addEventListener('click', () => { const v = $('#treeInput').value.trim(); if (!v) { toast('写点什么吧'); return; } const d = new Date(); trees.push({ text: v, time: `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` }); ls.set('trees', trees); $('#treeInput').value = ''; $('#treeCount').textContent = '0 / 500'; renderTrees(); toast('已藏进树洞 🌳'); });
-$('#treeInput').addEventListener('input', e => { $('#treeCount').textContent = `${e.target.value.length} / 500`; });
-$('#treeList').addEventListener('click', e => { const btn = e.target.closest('[data-act="del"]'); if (!btn) return; trees.splice(+btn.dataset.i, 1); ls.set('trees', trees); renderTrees(); });
+$('#saveTreeBtn').addEventListener('click', () => {
+  const v = $('#treeInput').value.trim();
+  if (!v) { toast('写点什么吧'); return; }
+  if (editingTreeIdx >= 0) {
+    trees[editingTreeIdx].text = v;
+    editingTreeIdx = -1;
+    $('#saveTreeBtn').textContent = '存进树洞';
+    toast('已修改 ✏️');
+  } else {
+    const d = new Date();
+    trees.push({ text: v, time: `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` });
+    toast('已藏进树洞 🌳');
+  }
+  ls.set('trees', trees); $('#treeInput').value = ''; $('#treeCount').textContent = '0 / 2000'; renderTrees();
+});
+$('#treeInput').addEventListener('input', e => { $('#treeCount').textContent = `${e.target.value.length} / 2000`; });
+$('#treeList').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'); if (!btn) return;
+  const i = +btn.dataset.i;
+  if (btn.dataset.act === 'del') { trees.splice(i, 1); if (editingTreeIdx === i) { editingTreeIdx = -1; $('#saveTreeBtn').textContent = '存进树洞'; $('#treeInput').value = ''; $('#treeCount').textContent = '0 / 2000'; } ls.set('trees', trees); renderTrees(); }
+  else if (btn.dataset.act === 'edit') { editingTreeIdx = i; $('#treeInput').value = trees[i].text; $('#treeCount').textContent = `${trees[i].text.length} / 2000`; $('#saveTreeBtn').textContent = '更新'; $('#treeInput').focus(); renderTrees(); toast('正在编辑，改完点「更新」'); }
+});
 renderTrees();
 
 /* ===== 娱乐-游戏时间 ===== */
