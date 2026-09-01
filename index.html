@@ -440,10 +440,16 @@ ul { list-style: none; }
 <div class="modal" id="billModal"><div class="modal-mask"></div><div class="modal-card">
   <div class="modal-head"><h3>💰 记账本</h3><button class="modal-close" data-close>×</button></div>
   <div class="modal-body">
+    <!-- 月份切换器 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#faf3ff;border:1px solid #ece0fa;border-radius:10px;padding:7px 12px;margin-bottom:10px">
+      <button id="billPrevMonth" style="width:30px;height:30px;border:none;border-radius:8px;background:#ece4fb;color:#6a4cb0;font-size:15px;font-weight:700">◀</button>
+      <span id="viewMonthLabel" style="font-size:14px;font-weight:700;color:#5b3aa8">2026年9月</span>
+      <button id="billNextMonth" style="width:30px;height:30px;border:none;border-radius:8px;background:#ece4fb;color:#6a4cb0;font-size:15px;font-weight:700">▶</button>
+    </div>
     <!-- 月度收入与预算（顶部醒目位置） -->
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <div style="flex:1;padding:12px;background:#e6f9ee;border-radius:12px">
-        <div style="font-size:12px;color:#2d8a4f;font-weight:600">💵 又发财啦（本月收入）</div>
+        <div style="font-size:12px;color:#2d8a4f;font-weight:600">💵 又发财啦（<span id="incomeMonthLabel">本月</span>收入）</div>
         <div id="incomeTotal" style="font-size:18px;font-weight:700;color:#2d8a4f;margin:4px 0">¥0</div>
         <div style="display:flex;gap:4px"><input type="text" id="incomeSource" placeholder="来源" style="flex:1;padding:5px 8px;border:1px solid #bfe6cc;border-radius:8px;font-size:12px" /><input type="number" id="incomeAmount" placeholder="金额" style="flex:none;width:70px;padding:5px 8px;border:1px solid #bfe6cc;border-radius:8px;font-size:12px" /><button id="addIncomeBtn" style="padding:5px 10px;background:#2d8a4f;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600">+</button></div>
         <div id="incomeList" style="margin-top:8px"></div>
@@ -468,6 +474,8 @@ ul { list-style: none; }
       <div style="flex:1;padding:10px;background:#fff5d8;border-radius:10px;text-align:center"><div style="font-size:11px;color:#8a6d1a">本周</div><div id="billWeek" style="font-size:16px;font-weight:700;color:#8a6d1a;margin-top:2px">¥0</div></div>
       <div style="flex:1;padding:10px;background:#ede4fb;border-radius:10px;text-align:center"><div style="font-size:11px;color:#5b3aa8">本月</div><div id="billMonth" style="font-size:16px;font-weight:700;color:#5b3aa8;margin-top:2px">¥0</div></div>
     </div>
+    <!-- 月度收支对比图 -->
+    <div id="monthChart" style="padding:12px;background:#f5f0fc;border-radius:12px;margin-bottom:12px"></div>
     <div id="billList"></div>
     <div class="summary-card" id="billMonthly"></div>
   </div>
@@ -1712,12 +1720,16 @@ let activeCat = '小吃货';
 let bills = ls.get('bills', []);
 let incomes = ls.get('incomes', []); // {source, amount, date}
 let budgets = ls.get('budgets', {}); // {'2026-08': 3000}
+let viewMonth = monthStr(); // 当前查看的月份（默认当月，月初自动只显示新月账单）
 $$('.bill-cat').forEach(c => c.addEventListener('click', () => { activeCat = c.dataset.cat; $$('.bill-cat').forEach(x => x.classList.toggle('active', x === c)); }));
+function monthLabelStr(m) { const [y, mm] = m.split('-').map(Number); return `${y}年${mm}月`; }
 function renderBills() {
-  const sums = {}; Object.keys(billCats).forEach(k => sums[k] = 0); bills.forEach(b => sums[b.cat] += (+b.amount || 0));
+  // 分类汇总 & 账单列表：只显示查看月份（月初自动"清零"，历史归档保留）
+  const vmBills = bills.map((b, idx) => ({ ...b, _idx: idx })).filter(b => b.date.startsWith(viewMonth));
+  const sums = {}; Object.keys(billCats).forEach(k => sums[k] = 0); vmBills.forEach(b => sums[b.cat] += (+b.amount || 0));
   Object.keys(billCats).forEach(k => $(`#sum${k}`).textContent = '¥' + sums[k].toFixed(0));
-  $('#billList').innerHTML = bills.slice().reverse().map((b, i) => `<div class="list-item"><span><span class="tag" style="background:#fde6ef;color:#c64a82">${billCats[b.cat]||'📦'} ${b.cat}</span><span class="txt">${escapeHtml(b.item)}</span></span><span style="font-weight:700;color:#c64a82">-¥${(+b.amount).toFixed(2)}</span><span class="del" data-i="${bills.length - 1 - i}" data-act="del">×</span></div>`).join('');
-  // 每日/每周/每月统计
+  $('#billList').innerHTML = vmBills.slice().reverse().map(b => `<div class="list-item"><span><span class="tag" style="background:#fde6ef;color:#c64a82">${billCats[b.cat]||'📦'} ${b.cat}</span><span class="txt">${escapeHtml(b.item)}</span></span><span style="font-weight:700;color:#c64a82">-¥${(+b.amount).toFixed(2)}</span><span class="del" data-i="${b._idx}" data-act="del">×</span></div>`).join('') || '<div style="font-size:12px;color:#9989b8;text-align:center;padding:10px 0">这个月还没有账单，记一笔吧 ✍️</div>';
+  // 每日/每周/每月统计（真实时间统计，不受查看月份影响）
   const today = todayStr();
   const todayBills = bills.filter(b => b.date === today);
   const todayTotal = todayBills.reduce((s, b) => s + (+b.amount || 0), 0);
@@ -1727,7 +1739,7 @@ function renderBills() {
   const monday = new Date(now); monday.setDate(now.getDate() - dayOfWeek + 1); monday.setHours(0,0,0,0);
   const weekBills = bills.filter(b => { const [y,m,d] = b.date.split('-').map(Number); const bd = new Date(y, m-1, d); return bd >= monday; });
   const weekTotal = weekBills.reduce((s, b) => s + (+b.amount || 0), 0);
-  // 本月
+  // 本月（真实当月）
   const cm = monthStr();
   const monthBills = bills.filter(b => b.date.startsWith(cm));
   const monthTotal = monthBills.reduce((s, b) => s + (+b.amount || 0), 0);
@@ -1736,23 +1748,27 @@ function renderBills() {
   $('#billMonth').textContent = '¥' + monthTotal.toFixed(2);
   $('#billTileSub').textContent = `本月 ${monthTotal.toFixed(0)} 元`;
   $('#myBillTotal').textContent = monthTotal.toFixed(2);
-  const counts = {}; monthBills.forEach(b => counts[b.cat] = (counts[b.cat] || 0) + (+b.amount || 0));
+  // 查看月份的总结
+  const vmTotal = vmBills.reduce((s, b) => s + (+b.amount || 0), 0);
+  const counts = {}; vmBills.forEach(b => counts[b.cat] = (counts[b.cat] || 0) + (+b.amount || 0));
   const top = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
-  $('#billMonthly').innerHTML = `<b>本月账单总结</b><div>总支出 ¥${monthTotal.toFixed(2)} · ${monthBills.length} 笔 · 最高：${top ? top[0] : '暂无'}<br>今日 ¥${todayTotal.toFixed(2)} · 本周 ¥${weekTotal.toFixed(2)}</div>`;
-  // 收入与预算
-  renderIncomeBudget(monthTotal);
+  $('#billMonthly').innerHTML = `<b>${monthLabelStr(viewMonth)}账单总结</b><div>总支出 ¥${vmTotal.toFixed(2)} · ${vmBills.length} 笔 · 最高：${top ? top[0] : '暂无'}<br>今日 ¥${todayTotal.toFixed(2)} · 本周 ¥${weekTotal.toFixed(2)}</div>`;
+  // 月份标签
+  const isCur = viewMonth === cm;
+  $('#viewMonthLabel').textContent = monthLabelStr(viewMonth) + (isCur ? ' · 本月' : '');
+  $('#incomeMonthLabel').textContent = isCur ? '本月' : monthLabelStr(viewMonth);
+  // 收入与预算（按查看月份）
+  renderIncomeBudget(vmTotal);
+  // 月度收支对比图
+  renderMonthChart();
 }
 function renderIncomeBudget(monthTotal) {
-  const cm = monthStr();
-  const monthIncomes = incomes.filter(i => i.date.startsWith(cm));
+  const monthIncomes = incomes.map((inc, idx) => ({ ...inc, _idx: idx })).filter(i => i.date.startsWith(viewMonth));
   const incomeTotal = monthIncomes.reduce((s, i) => s + (+i.amount || 0), 0);
   $('#incomeTotal').textContent = '¥' + incomeTotal.toFixed(2);
-  $('#incomeList').innerHTML = monthIncomes.slice().reverse().map((inc, i) => {
-    const realI = incomes.length - 1 - incomes.indexOf(inc);
-    return `<div class="list-item" style="padding:6px 8px;margin-bottom:4px"><span class="txt" style="font-size:12px">${escapeHtml(inc.source)} <span style="color:#2d8a4f;font-weight:600">+¥${(+inc.amount).toFixed(2)}</span></span><span class="del" data-i="${realI}" data-act="delInc">×</span></div>`;
-  }).join('') || '<div style="font-size:11px;color:#9989b8;padding:4px">本月还没记收入</div>';
-  // 预算
-  const budget = budgets[cm];
+  $('#incomeList').innerHTML = monthIncomes.slice().reverse().map(inc => `<div class="list-item" style="padding:6px 8px;margin-bottom:4px"><span class="txt" style="font-size:12px">${escapeHtml(inc.source)} <span style="color:#2d8a4f;font-weight:600">+¥${(+inc.amount).toFixed(2)}</span></span><span class="del" data-i="${inc._idx}" data-act="delInc">×</span></div>`).join('') || '<div style="font-size:11px;color:#9989b8;padding:4px">这个月还没记收入</div>';
+  // 预算（按查看月份）
+  const budget = budgets[viewMonth];
   if (budget && budget > 0) {
     const remain = budget - monthTotal;
     const pct = Math.min(100, (monthTotal / budget * 100)).toFixed(0);
@@ -1762,13 +1778,63 @@ function renderIncomeBudget(monthTotal) {
     $('#budgetStatus').textContent = '还没设预算哦';
   }
 }
+/* 月度收支对比图（近6个月，纯CSS柱状图） */
+function renderMonthChart() {
+  const months = [];
+  const now = new Date();
+  for (let k = 5; k >= 0; k--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - k, 1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+  const stats = months.map(m => {
+    const inc = incomes.filter(i => i.date.startsWith(m)).reduce((s,i) => s + (+i.amount||0), 0);
+    const exp = bills.filter(b => b.date.startsWith(m)).reduce((s,b) => s + (+b.amount||0), 0);
+    return { m, inc, exp };
+  });
+  const max = Math.max(1, ...stats.map(s => Math.max(s.inc, s.exp)));
+  const fmt = v => v >= 1000 ? (v/1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(Math.round(v));
+  const bars = stats.map(s => {
+    const incH = s.inc > 0 ? Math.max(5, s.inc / max * 80) : 0;
+    const expH = s.exp > 0 ? Math.max(5, s.exp / max * 80) : 0;
+    const label = parseInt(s.m.split('-')[1], 10);
+    const cur = s.m === viewMonth;
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <div style="display:flex;justify-content:center;gap:4px;font-size:9px;line-height:1;white-space:nowrap">
+        <span style="color:#2d8a4f;font-weight:600">${s.inc>0?fmt(s.inc):''}</span>
+        <span style="color:#c64a82;font-weight:600">${s.exp>0?fmt(s.exp):''}</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:80px">
+        <div style="width:13px;height:${incH}px;background:linear-gradient(#5cb87e,#2d8a4f);border-radius:4px 4px 0 0" title="${s.m} 收入 ¥${s.inc.toFixed(0)}"></div>
+        <div style="width:13px;height:${expH}px;background:linear-gradient(#f2a6c4,#e0709f);border-radius:4px 4px 0 0" title="${s.m} 支出 ¥${s.exp.toFixed(0)}"></div>
+      </div>
+      <span style="font-size:10px;color:${cur?'#6a4cb0':'#9989b8'};font-weight:${cur?'700':'400'}">${label}月</span>
+    </div>`;
+  }).join('');
+  $('#monthChart').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;font-weight:600;color:#5b3aa8">📊 近6个月收支对比</span>
+      <span style="font-size:10px;color:#9989b8"><span style="color:#2d8a4f">■</span>收入 <span style="color:#e0709f">■</span>支出</span>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between">${bars}</div>`;
+}
+/* 月份切换 */
+function shiftMonth(delta) {
+  const [y, m] = viewMonth.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  const nm = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  if (nm > monthStr()) { toast('不能看未来哦 👀'); return; }
+  viewMonth = nm;
+  renderBills();
+}
+$('#billPrevMonth').addEventListener('click', () => shiftMonth(-1));
+$('#billNextMonth').addEventListener('click', () => shiftMonth(1));
 $('#addIncomeBtn').addEventListener('click', () => {
   const source = $('#incomeSource').value.trim(), amount = $('#incomeAmount').value.trim();
   if (!source || !amount) { toast('填写完整'); return; }
   incomes.push({ source, amount: +amount, date: todayStr() });
   ls.set('incomes', incomes);
   $('#incomeSource').value = ''; $('#incomeAmount').value = '';
-  renderBills(); toast('又发财啦 💵');
+  viewMonth = monthStr(); renderBills(); toast('又发财啦 💵');
 });
 $('#incomeSource').addEventListener('keydown', e => { if (e.key === 'Enter') $('#incomeAmount').focus(); });
 $('#incomeAmount').addEventListener('keydown', e => { if (e.key === 'Enter') $('#addIncomeBtn').click(); });
@@ -1776,13 +1842,13 @@ $('#incomeList').addEventListener('click', e => { const btn = e.target.closest('
 $('#saveBudgetBtn').addEventListener('click', () => {
   const v = $('#budgetInput').value.trim();
   if (!v || +v <= 0) { toast('设个金额吧'); return; }
-  budgets[monthStr()] = +v;
+  budgets[viewMonth] = +v;
   ls.set('budgets', budgets);
   $('#budgetInput').value = '';
   renderBills(); toast('预算已设置 🌸');
 });
 $('#budgetInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveBudgetBtn').click(); });
-$('#addBillBtn').addEventListener('click', () => { const item = $('#billItem').value.trim(), amount = $('#billAmount').value.trim(); if (!item || !amount) { toast('填写完整'); return; } bills.push({ cat: activeCat, item, amount: +amount, date: todayStr() }); ls.set('bills', bills); $('#billItem').value = ''; $('#billAmount').value = ''; renderBills(); toast('已记账'); });
+$('#addBillBtn').addEventListener('click', () => { const item = $('#billItem').value.trim(), amount = $('#billAmount').value.trim(); if (!item || !amount) { toast('填写完整'); return; } bills.push({ cat: activeCat, item, amount: +amount, date: todayStr() }); ls.set('bills', bills); $('#billItem').value = ''; $('#billAmount').value = ''; viewMonth = monthStr(); renderBills(); toast('已记账'); });
 $('#billList').addEventListener('click', e => { const btn = e.target.closest('[data-act="del"]'); if (!btn) return; bills.splice(+btn.dataset.i, 1); ls.set('bills', bills); renderBills(); });
 renderBills();
 </script>
