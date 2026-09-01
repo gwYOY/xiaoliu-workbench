@@ -492,6 +492,10 @@ ul { list-style: none; }
       <div class="card" style="padding:14px;margin-bottom:10px"><b>📚 学习统计</b><div style="font-size:12px;color:#9989b8;margin-top:4px">今日完成 <span id="myStudyDone">0</span> / <span id="myStudyTotal">0</span> 项任务</div></div>
       <div class="card" style="padding:14px;margin-bottom:10px"><b>💃 运动统计</b><div style="font-size:12px;color:#9989b8;margin-top:4px">本周运动 <span id="mySportCount">0</span> 次</div></div>
       <div class="card" style="padding:14px"><b>💰 本月支出</b><div style="font-size:12px;color:#9989b8;margin-top:4px">共 <span id="myBillTotal">0</span> 元</div></div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button id="importHistoryBtn" style="flex:1;padding:11px;background:#ece4fb;border:none;border-radius:12px;font-size:13px;font-weight:600;color:#6a4cb0">📥 导入历史记录</button>
+        <button id="checkUpdateBtn" style="flex:1;padding:11px;background:#fde6ef;border:none;border-radius:12px;font-size:13px;font-weight:600;color:#c64a82">🔄 检查更新</button>
+      </div>
     </div>
   </div>
 </div></div>
@@ -1851,6 +1855,40 @@ $('#budgetInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#
 $('#addBillBtn').addEventListener('click', () => { const item = $('#billItem').value.trim(), amount = $('#billAmount').value.trim(); if (!item || !amount) { toast('填写完整'); return; } bills.push({ cat: activeCat, item, amount: +amount, date: todayStr() }); ls.set('bills', bills); $('#billItem').value = ''; $('#billAmount').value = ''; viewMonth = monthStr(); renderBills(); toast('已记账'); });
 $('#billList').addEventListener('click', e => { const btn = e.target.closest('[data-act="del"]'); if (!btn) return; bills.splice(+btn.dataset.i, 1); ls.set('bills', bills); renderBills(); });
 renderBills();
+
+/* ===== 历史记录导入 + 检查更新 ===== */
+const IMPORT_DATA = {
+  bookNotes: [
+    { text: "职业理念 教育观 学生观 教师观\n①教育观：素质教育的理念；以人为本的学生观\n❶素质教育是以提高国民素质为根本宗旨\n❷素质教育是面向全体学生的教育\n❸素质教育是促进学生全面地、生动活泼地、可持续发展地教育\n❹素质教育是促进学生个性发展的教育\n❺素质教育着力提升学生的社会责任感、创新精神、实践能力。\n②新课程改革的教学观\n1.教学由以教育者为中心 转为以学习者为中心\n2.由教会学生知识 转为教会学生学习\n3.由重结论轻过程 转为重结论同时更重课程\n4.由关注学科 转为关注人", time: "8/4 09:41" },
+    { text: "以人为本的学生观：学生是发展的人（学生的可持续发展是人 每个阶段不同 身心的发展不同 根据每个阶段进行不同教学 学生是具有巨大发展潜能的人 学生的处于发展过程中的人）\n学生是独特的人（学生是具有丰富个性的独特的人 学生和成年人是具有很大差异的）\n学生是具有独立意义的人", time: "8/4 09:43" },
+    { text: "教师观 教师的职业角色的转变\n1从教师与学生关系的看 新课程要求老师是发展促进者和学生学习引导者\n2从教学和课程关系看 新课程要求教师是课程的建设着和开发者\n3从教学和研究关系看 新课程要求教师是学生教育教学的研究者\n4从校园和社区关系看 新课程要求教师是社区开放型教师\n教师教学行为的转变\n1对于师生关系 强调尊重和赞赏\n2从教学上强调 帮助和引导\n3在自我上强调反思\n4和其他教育者关系上 强调共同合作", time: "8/4 10:14" },
+    { text: "教是的职业道德\n爱国守法 基本要求\n爱岗敬业 本质要求\n关爱学生 灵魂\n教书育人 天职\n为人师表 内在要求\n终身学习 立竭动力", time: "8/4 10:16" },
+    { text: "毛泽东自述：能决定胜利的不是手上的武器，而是你顽强的意识和明确的目标🎯", time: "8/1 16:37" },
+    { text: "在国际机车赛道上，张雪驾驶国产机车冲破欧美日的长期垄断，拿下世界级赛事冠军，一句“我们赢了”震撼无数国人。这个十四岁就辍学做修车学徒的普通人，用二十年的坚守逆袭人生。\n\n他的故事激励着每一个不甘平庸的当代青年。张雪的人生起点满是困顿，家境贫寒的他早早离开校园，终日与油污、零件相伴。可底层的生活没有磨灭他对机车的热爱。十九岁时，他冒雨长途追逐摄制团队，只为争取一个展示自己的机会。不怕狼狈，不怕拒绝，放下所谓的面子，只为靠近心中的梦想。\n\n反观当下不少年轻人，遇到一点挫折就退缩，碍于脸面不敢尝试，沉溺于躺平与内耗。张雪告诉我们：出身无法决定命运，敢于为梦想主动争取，才是青春该有的姿态。\n\n追梦之路从无捷径，长久的死磕才是成功的密钥。从修车学徒到机车研发者，张雪拒绝贴牌组装赚取快钱，执意攻坚被国外垄断的大排量发动机技术。创业低谷时，他抵押房产、身负债务，依旧扎根车间，日复一日打磨零件、反复试验。一年休息寥寥数日，无数个日夜埋头钻研，终于造出属于中国的自主发动机。\n\n环塔拉力赛中，他意外摔伤昏迷，醒来后依旧坚持重返赛场。这份咬牙坚持的韧劲，正是当代年轻人稀缺的品质。很多人做事浅尝辄止，渴望一夜成名，却不愿长期深耕，最终一事无成。唯有沉下心坚持深耕，熬过无人问津的日子，才能迎来属于自己的高光时刻。\n\n更可贵的是，张雪的梦想不止于个人逆袭，更怀揣着一份家国担当。他不愿中国机车行业一直被国外技术卡脖子，凭着一腔骨气自主研发，让国产机车站上世界顶级赛场。个人的小梦想，融入国家发展的大格局，让奋斗拥有了更厚重的意义。\n\n作为新时代青年，我们不必人人奔赴赛道，但可以心怀责任，在各自的领域脚踏实地，为国蓄力。“按照你想干的去干，一直干，就对了。”张雪的这句话值得我们铭记。不必抱怨出身平凡，不必畏惧前路坎坷。愿我们以热爱为方向，以坚守为铠甲，摒弃躺平内耗，凭着不服输的意志奋力奔跑，在属于自己的赛道上奋力驰骋，用奋斗书写新时代青年的答卷。", time: "8/7 21:28" },
+    { text: "2026年中国AI盛典上有这么一位值得我们尊敬的人——年度AI特别贡献人物 京东前副总裁蔡磊。\n\n拥有一具渐冻的身体在打200年来没人打赢的仗，数年间他搭平台找病友推管线，纵然躯体不在自由，仍坚守在人类绝症的生死时速战场上。尽管目前研发的药救治不了他自己这类渐冻症，依旧砥砺前行。\n\n纵使他全身只有眼球能被意志控制，依旧每天在电脑前运用眼动仪+AI语音进行交流，传递信息，并且自主研发AI渐冻症科研大脑，用来攻坚新药研发。不负所望，渐冻的冰山被他撞出了一个小缺口，他研发的药使“小刘”这类渐冻患者的病情得到控制。\n\n纵使不敌，也不屈服。病痛剥夺了他的行动自由，却从未禁锢他的顽强意志。虽然他只能关在家里狭小的卧室里，每天还需要3个阿姨照顾，对他已经没有什么隐私可言，但他给了小刘更多的生存空间。\n\n他说：“哪怕我是倒在黎明前的黑夜里，我也要确认这条路已经铺好了，后面的病友能踩着我的肩膀走到阳光下”。\n\n他用AI做石基，架起了一条渐冻逐步走向曙光的桥梁，温暖了每位等待死亡渐冻患者的心。\n\n身处新时代普普通通的我们，虽然不能像蔡总这类科技创新工作者一样默默奉献、造福一方，但是我们合理运用规划上网时间，做手机的主人，而不是让手机做的主人。网络科技就是一把双刃剑，能成就部分人，也能杀人。我们能做的就是严于律己，约束自己，不做键盘侠在网上泄愤。近期的日本西村力粉丝事件，就令人惋惜。\n\n它只是辅助工具正如一把钥匙，无法让你感受到风拂脸颊，无法让你感受心动。运用好这把钥匙，才能打开人类世界空间地大门，去自己亲身去体验，去面对面的交流、感受，最终才能穿上属于自己的华丽新衣，风度翩翩地站在世界里。\n\n自己内心深处的境界与价值，是他人始终窥探不到的。", time: "8/15 18:13" },
+    { text: "世界上大概没有人能面对舆论风暴不受影响。乌台诗案都让苏东坡受尽凌辱折磨，差点都无法翻身甚至轻身，更何况网络发达的如今。\n\n唾沫星子是可以淹死人的。做好自己，我们可以捂住耳朵向内求，去听听自己的心声，活在自己的世界里又未免是一件坏事。\n\n错的不是我们，而是霸凌、煽风点火、谄媚的别人。我能做到的是：不去评价别人，管好自己，不要让自己成为其中一员。", time: "8/13 23:29" },
+    { text: "莫听穿林打叶声，何妨吟啸且徐行。\n竹杖芒鞋轻胜马，谁怕？一蓑烟雨任平生。\n料峭春风吹酒醒，微冷，山头斜照却相迎。\n回首向来萧瑟处，归去，也无风雨也无晴。", time: "8/13 23:15" }
+  ],
+  todos: [
+    { text: "书单 红星照耀中国 地下室手记", done: false },
+    { text: "书单 基地；我，机器人；黄昏；弗兰肯斯坦", done: false },
+    { text: "书单 变形记 绿房子 印第安人", done: false },
+    { text: "德伯家的苔丝", done: false }
+  ]
+};
+$('#importHistoryBtn').addEventListener('click', () => {
+  if (!confirm('导入 9 条读书感想 + 4 条待办？\n（已有的相同记录不会重复导入）')) return;
+  let added = 0;
+  IMPORT_DATA.bookNotes.forEach(n => { if (!bookNotes.some(b => b.text === n.text)) { bookNotes.push(n); added++; } });
+  IMPORT_DATA.todos.forEach(t => { if (!todos.some(x => x.text === t.text)) { todos.push(t); added++; } });
+  ls.set('bookNotes', bookNotes); ls.set('todos', todos);
+  renderNotes(); renderTodos();
+  toast(added > 0 ? `导入成功，新增 ${added} 条 ✨` : '这些记录已经都在啦');
+});
+$('#checkUpdateBtn').addEventListener('click', () => {
+  toast('正在检查更新…');
+  setTimeout(() => { location.href = location.pathname + '?v=' + Date.now(); }, 600);
+});
 </script>
 </body>
 </html>
