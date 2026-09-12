@@ -468,6 +468,8 @@ ul { list-style: none; }
       <div class="bill-cat" data-cat="生活用品小零件"><div class="cat-emoji">🧴</div><div class="cat-name">生活用品小零件</div><div class="cat-sum" id="sum生活用品小零件">0</div></div>
       <div class="bill-cat" data-cat="其他支出"><div class="cat-emoji">📦</div><div class="cat-name">其他支出</div><div class="cat-sum" id="sum其他支出">0</div></div>
     </div>
+    <!-- 分类流水明细（点开分类查看） -->
+    <div id="catDetail" style="display:none"></div>
     <div class="form-row"><input type="text" id="billItem" placeholder="买了什么" /><input type="number" id="billAmount" placeholder="金额" style="flex:none;width:90px" /><button id="addBillBtn">记一笔</button></div>
     <div id="billStats" style="display:flex;gap:8px;margin-bottom:12px">
       <div style="flex:1;padding:10px;background:#fde6ef;border-radius:10px;text-align:center"><div style="font-size:11px;color:#c64a82">今日</div><div id="billToday" style="font-size:16px;font-weight:700;color:#c64a82;margin-top:2px">¥0</div></div>
@@ -476,7 +478,6 @@ ul { list-style: none; }
     </div>
     <!-- 月度收支对比图 -->
     <div id="monthChart" style="padding:12px;background:#f5f0fc;border-radius:12px;margin-bottom:12px"></div>
-    <div id="billList"></div>
     <div class="summary-card" id="billMonthly"></div>
   </div>
 </div></div>
@@ -1725,14 +1726,20 @@ let bills = ls.get('bills', []);
 let incomes = ls.get('incomes', []); // {source, amount, date}
 let budgets = ls.get('budgets', {}); // {'2026-08': 3000}
 let viewMonth = monthStr(); // 当前查看的月份（默认当月，月初自动只显示新月账单）
-$$('.bill-cat').forEach(c => c.addEventListener('click', () => { activeCat = c.dataset.cat; $$('.bill-cat').forEach(x => x.classList.toggle('active', x === c)); }));
+let openCat = null; // 当前展开流水明细的分类（null=收起）
+$$('.bill-cat').forEach(c => c.addEventListener('click', () => {
+  const cat = c.dataset.cat;
+  activeCat = cat;
+  $$('.bill-cat').forEach(x => x.classList.toggle('active', x === c));
+  openCat = (openCat === cat) ? null : cat; // 再点一次收起
+  renderCatDetail();
+}));
 function monthLabelStr(m) { const [y, mm] = m.split('-').map(Number); return `${y}年${mm}月`; }
 function renderBills() {
-  // 分类汇总 & 账单列表：只显示查看月份（月初自动"清零"，历史归档保留）
+  // 分类汇总：按查看月份（月初自动"清零"，历史归档保留）
   const vmBills = bills.map((b, idx) => ({ ...b, _idx: idx })).filter(b => b.date.startsWith(viewMonth));
   const sums = {}; Object.keys(billCats).forEach(k => sums[k] = 0); vmBills.forEach(b => sums[b.cat] += (+b.amount || 0));
   Object.keys(billCats).forEach(k => $(`#sum${k}`).textContent = '¥' + sums[k].toFixed(0));
-  $('#billList').innerHTML = vmBills.slice().reverse().map(b => `<div class="list-item"><span><span class="tag" style="background:#fde6ef;color:#c64a82">${billCats[b.cat]||'📦'} ${b.cat}</span><span class="txt">${escapeHtml(b.item)}</span></span><span style="font-weight:700;color:#c64a82">-¥${(+b.amount).toFixed(2)}</span><span class="del" data-i="${b._idx}" data-act="del">×</span></div>`).join('') || '<div style="font-size:12px;color:#9989b8;text-align:center;padding:10px 0">这个月还没有账单，记一笔吧 ✍️</div>';
   // 每日/每周/每月统计（真实时间统计，不受查看月份影响）
   const today = todayStr();
   const todayBills = bills.filter(b => b.date === today);
@@ -1765,6 +1772,25 @@ function renderBills() {
   renderIncomeBudget(vmTotal);
   // 月度收支对比图
   renderMonthChart();
+  // 分类流水明细联动（月份切换/记账/删除后刷新）
+  renderCatDetail();
+}
+/* 分类流水明细：点开分类显示该分类当月流水 */
+function renderCatDetail() {
+  const box = $('#catDetail');
+  if (!box) return;
+  if (!openCat) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const catBills = bills.map((b, idx) => ({ ...b, _idx: idx })).filter(b => b.date.startsWith(viewMonth) && b.cat === openCat);
+  const total = catBills.reduce((s, b) => s + (+b.amount || 0), 0);
+  box.style.display = 'block';
+  box.innerHTML = `
+    <div style="padding:12px;background:#faf3ff;border:1.5px solid #dcc8f2;border-radius:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:700;color:#5b3aa8">${billCats[openCat] || '📦'} ${openCat}</span>
+        <span style="font-size:11px;color:#9989b8">${monthLabelStr(viewMonth)} · ${catBills.length} 笔 · ¥${total.toFixed(2)}</span>
+      </div>
+      ${catBills.slice().reverse().map(b => `<div class="list-item" style="padding:8px 10px;margin-bottom:5px"><span class="txt" style="font-size:12px"><span style="color:#9989b8;font-size:11px;margin-right:5px">${b.date.slice(5).replace('-', '/')}</span>${escapeHtml(b.item)}</span><span style="font-weight:700;color:#c64a82;font-size:13px">-¥${(+b.amount).toFixed(2)}</span><span class="del" data-i="${b._idx}" data-act="del">×</span></div>`).join('') || '<div style="font-size:12px;color:#9989b8;text-align:center;padding:10px 0">这个月该分类还没有流水 ✍️</div>'}
+    </div>`;
 }
 function renderIncomeBudget(monthTotal) {
   const monthIncomes = incomes.map((inc, idx) => ({ ...inc, _idx: idx })).filter(i => i.date.startsWith(viewMonth));
@@ -1853,7 +1879,7 @@ $('#saveBudgetBtn').addEventListener('click', () => {
 });
 $('#budgetInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveBudgetBtn').click(); });
 $('#addBillBtn').addEventListener('click', () => { const item = $('#billItem').value.trim(), amount = $('#billAmount').value.trim(); if (!item || !amount) { toast('填写完整'); return; } bills.push({ cat: activeCat, item, amount: +amount, date: todayStr() }); ls.set('bills', bills); $('#billItem').value = ''; $('#billAmount').value = ''; viewMonth = monthStr(); renderBills(); toast('已记账'); });
-$('#billList').addEventListener('click', e => { const btn = e.target.closest('[data-act="del"]'); if (!btn) return; bills.splice(+btn.dataset.i, 1); ls.set('bills', bills); renderBills(); });
+$('#catDetail').addEventListener('click', e => { const btn = e.target.closest('[data-act="del"]'); if (!btn) return; bills.splice(+btn.dataset.i, 1); ls.set('bills', bills); renderBills(); });
 renderBills();
 
 /* ===== 历史记录导入 + 检查更新 ===== */
